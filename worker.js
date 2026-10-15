@@ -14,7 +14,7 @@ export default {
     return new Response(
       JSON.stringify({
         ok: true,
-        message: "EXTRA MONEY Worker connected"
+        message: "EXTRA MONEY Worker connected successfully"
       }),
       { headers }
     );
