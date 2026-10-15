@@ -1,371 +1,374 @@
-const cors = {
+const CORS = {
   "Access-Control-Allow-Origin": "https://extramoney-12e.pages.dev",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  "Access-Control-Max-Age": "86400",
-  "Vary": "Origin",
-  "Content-Type": "application/json"
+  "Content-Type": "application/json; charset=utf-8"
 };
 
-const enc = new TextEncoder();
+const json = (data, status = 200) =>
+  new Response(JSON.stringify(data), { status, headers: CORS });
 
-function reply(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: cors
-  });
+async function query(db, sql, ...args) {
+  return db.prepare(sql).bind(...args).all();
 }
 
-function b64(bytes) {
-  let s = "";
-  for (const b of bytes) s += String.fromCharCode(b);
-  return btoa(s).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+async function run(db, sql, ...args) {
+  return db.prepare(sql).bind(...args).run();
 }
 
-function unb64(s) {
-  s = s.replace(/-/g, "+").replace(/_/g, "/");
-  s += "=".repeat((4 - s.length % 4) % 4);
-  return Uint8Array.from(atob(s), c => c.charCodeAt(0));
-}
-
-async function sign(data, secret) {
-  const key = await crypto.subtle.importKey(
-    "raw", enc.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false, ["sign"]
-  );
-  return b64(new Uint8Array(
-    await crypto.subtle.sign("HMAC", key, enc.encode(data))
-  ));
-}
-
-async function token(payload, env) {
-  const data = b64(enc.encode(JSON.stringify({
-    ...payload,
-    exp: Date.now() + 86400000
-  })));
-  return data + "." + await sign(data, env.AUTH_SECRET);
-}
-
-async function auth(request, env) {
-  const value = request.headers.get("Authorization") || "";
-  const parts = value.replace(/^Bearer\s+/i, "").split(".");
-  if (parts.length !== 2 || !env.AUTH_SECRET) return null;
-
-  const expected = await sign(parts[0], env.AUTH_SECRET);
-  if (expected !== parts[1]) return null;
-
-  try {
-    const p = JSON.parse(new TextDecoder().decode(unb64(parts[0])));
-    if (!p.exp || p.exp < Date.now()) return null;
-    return p;
-  } catch {
-    return null;
-  }
+async function first(db, sql, ...args) {
+  return db.prepare(sql).bind(...args).first();
 }
 
 async function hashPassword(password) {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const key = await crypto.subtle.importKey(
-    "raw", enc.encode(password), "PBKDF2", false, ["deriveBits"]
-  );
-  const result = await crypto.subtle.deriveBits({
-    name: "PBKDF2",
-    salt,
-    iterations: 100000,
-    hash: "SHA-256"
-  }, key, 256);
-  return `pbkdf2$${b64(salt)}$${b64(new Uint8Array(result))}`;
+  const data = new TextEncoder().encode(password);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(digest)]
+    .map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function verifyPassword(password, stored) {
-  const parts = stored.split("$");
-  if (parts.length !== 3 || parts[0] !== "pbkdf2") return false;
+function token() {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return [...bytes].map(b => b.toString(16).padStart(2, "0")).join("");
+}
 
-  const key = await crypto.subtle.importKey(
-    "raw", enc.encode(password), "PBKDF2", false, ["deriveBits"]
+async function currentUser(request, env) {
+  const auth = request.headers.get("Authorization") || "";
+  const session = auth.replace(/^Bearer\s+/i, "");
+  if (!session) return null;
+
+  const row = await first(
+    env.DB,
+    `SELECT users.id, users.username, users.balance, users.role
+     FROM sessions JOIN users ON users.id = sessions.user_id
+     WHERE sessions.token = ? AND sessions.expires_at > ?`,
+    session, Date.now()
   );
-  const result = await crypto.subtle.deriveBits({
-    name: "PBKDF2",
-    salt: unb64(parts[1]),
-    iterations: 100000,
-    hash: "SHA-256"
-  }, key, 256);
+  return row || null;
+}
 
-  const actual = b64(new Uint8Array(result));
-  return actual === parts[2];
+async function setup(env) {
+  const statements = [
+    `CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      balance REAL NOT NULL DEFAULT 0,
+      role TEXT NOT NULL DEFAULT 'user',
+      created_at INTEGER NOT NULL
+    )`,
+    `CREATE TABLE IF NOT EXISTS sessions (
+      token TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      expires_at INTEGER NOT NULL
+    )`,
+    `CREATE TABLE IF NOT EXISTS deposits (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      amount REAL NOT NULL,
+      utr TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at INTEGER NOT NULL
+    )`,
+    `CREATE TABLE IF NOT EXISTS withdrawals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      amount REAL NOT NULL,
+      upi TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at INTEGER NOT NULL
+    )`,
+    `CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    )`
+  ];
+
+  for (const sql of statements) await env.DB.prepare(sql).run();
 }
 
 export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: cors });
+      return new Response(null, { status: 204, headers: CORS });
     }
+
+    if (!env.DB) return json({ ok: false, error: "DB binding missing" }, 500);
 
     try {
       const url = new URL(request.url);
       const path = url.pathname.replace(/\/+$/, "") || "/";
       const method = request.method;
 
-      if (!env.DB) return reply({ ok: false, error: "DB binding missing" }, 500);
-
       if (path === "/" && method === "GET") {
-        return reply({ ok: true, message: "EXTRA MONEY API connected" });
+        return json({ ok: true, message: "EXTRA MONEY API connected" });
       }
 
-      let data = {};
-      if (method === "POST") {
-        try {
-          data = await request.json();
-        } catch {
-          return reply({ ok: false, error: "Invalid JSON" }, 400);
+      if (path === "/api/setup" && method === "POST") {
+        if (request.headers.get("X-Setup-Key") !== env.SETUP_KEY ||
+            !env.SETUP_KEY) {
+          return json({ ok: false, error: "Unauthorized" }, 401);
         }
+        await setup(env);
+        return json({ ok: true, message: "Database tables created" });
       }
 
-      // USER SIGNUP
-      if (path === "/api/signup" && method === "POST") {
-        const username = String(data.username || "").trim().toLowerCase();
-        const name = String(data.name || "").trim();
-        const password = String(data.password || "");
+      if (path === "/api/register" && method === "POST") {
+        const body = await request.json();
+        const username = String(body.username || "").trim();
+        const password = String(body.password || "");
 
-        if (!/^[a-z0-9_]{3,30}$/.test(username) ||
-            !name || name.length > 80 ||
+        if (!/^[a-zA-Z0-9_]{3,24}$/.test(username) ||
             password.length < 8 || password.length > 128) {
-          return reply({
+          return json({
             ok: false,
-            error: "Username, name or password is invalid"
+            error: "Username 3-24 characters; password at least 8 characters"
           }, 400);
         }
 
-        const password_hash = await hashPassword(password);
-        await env.DB.prepare(
-          `INSERT INTO users (username, name, password_hash)
-           VALUES (?, ?, ?)`
-        ).bind(username, name, password_hash).run();
+        const exists = await first(
+          env.DB, "SELECT id FROM users WHERE username = ?", username
+        );
+        if (exists) return json({ ok: false, error: "Username already exists" }, 409);
 
-        return reply({ ok: true, message: "Account created" }, 201);
+        await run(
+          env.DB,
+          "INSERT INTO users (username,password_hash,created_at) VALUES (?,?,?)",
+          username, await hashPassword(password), Date.now()
+        );
+        return json({ ok: true, message: "Registration successful" });
       }
 
-      // USER LOGIN
       if (path === "/api/login" && method === "POST") {
-        const username = String(data.username || "").trim().toLowerCase();
-        const password = String(data.password || "");
+        const body = await request.json();
+        const username = String(body.username || "").trim();
+        const password = String(body.password || "");
 
-        const user = await env.DB.prepare(
-          "SELECT username, name, password_hash FROM users WHERE username = ?"
-        ).bind(username).first();
+        const user = await first(
+          env.DB,
+          "SELECT id,username,password_hash,role FROM users WHERE username = ?",
+          username
+        );
 
-        if (!user || !(await verifyPassword(password, user.password_hash))) {
-          return reply({ ok: false, error: "Invalid login details" }, 401);
+        if (!user || user.password_hash !== await hashPassword(password)) {
+          return json({ ok: false, error: "Invalid username or password" }, 401);
         }
 
-        return reply({
+        const session = token();
+        await run(
+          env.DB,
+          "INSERT INTO sessions (token,user_id,expires_at) VALUES (?,?,?)",
+          session, user.id, Date.now() + 7 * 24 * 60 * 60 * 1000
+        );
+
+        return json({
           ok: true,
-          token: await token({ role: "user", username }, env),
-          user: { username: user.username, name: user.name }
+          token: session,
+          user: { id: user.id, username: user.username, role: user.role }
         });
       }
-
-      // ADMIN LOGIN: credentials must be configured as Worker secrets
-      if (path === "/api/admin/login" && method === "POST") {
-        if (!env.ADMIN_USERNAME || !env.ADMIN_PASSWORD || !env.AUTH_SECRET) {
-          return reply({ ok: false, error: "Admin secrets not configured" }, 500);
-        }
-
-        if (String(data.username || "") !== env.ADMIN_USERNAME ||
-            String(data.password || "") !== env.ADMIN_PASSWORD) {
-          return reply({ ok: false, error: "Invalid admin login" }, 401);
-        }
-
-        return reply({
-          ok: true,
-          token: await token({ role: "admin", username: env.ADMIN_USERNAME }, env)
-        });
-      }
-
-      // ALL OTHER API ROUTES REQUIRE AUTHENTICATION
-      const session = await auth(request, env);
-      if (!session) return reply({ ok: false, error: "Please login" }, 401);
 
       if (path === "/api/me" && method === "GET") {
-        if (session.role !== "user") {
-          return reply({ ok: false, error: "User login required" }, 403);
-        }
-
-        const user = await env.DB.prepare(
-          "SELECT username, name, balance, created_at FROM users WHERE username = ?"
-        ).bind(session.username).first();
-
-        if (!user) return reply({ ok: false, error: "User not found" }, 404);
-        return reply({ ok: true, user });
+        const user = await currentUser(request, env);
+        if (!user) return json({ ok: false, error: "Please log in" }, 401);
+        return json({ ok: true, user });
       }
 
-      // CREATE DEPOSIT REQUEST
-      if (path === "/api/deposit" && method === "POST") {
-        if (session.role !== "user") return reply({ ok: false, error: "Forbidden" }, 403);
-
-        const amount = Number(data.amount);
-        const utr = String(data.utr || "").trim();
-
-        if (!Number.isSafeInteger(amount) || amount < 1 ||
-            amount > 10000000 || utr.length < 6 || utr.length > 100) {
-          return reply({ ok: false, error: "Invalid amount or UTR" }, 400);
-        }
-
-        await env.DB.prepare(
-          `INSERT INTO deposits (username, amount, bonus, utr, status)
-           VALUES (?, ?, 0, ?, 'Pending')`
-        ).bind(session.username, amount, utr).run();
-
-        return reply({ ok: true, message: "Deposit request submitted" }, 201);
+      if (path === "/api/settings" && method === "GET") {
+        const rows = await query(env.DB, "SELECT key,value FROM settings");
+        return json({
+          ok: true,
+          settings: Object.fromEntries(rows.results.map(r => [r.key, r.value]))
+        });
       }
 
-      // CREATE WITHDRAWAL REQUEST; deduct balance only if sufficient
-      if (path === "/api/withdraw" && method === "POST") {
-        if (session.role !== "user") return reply({ ok: false, error: "Forbidden" }, 403);
+      if (path === "/api/deposits" && method === "POST") {
+        const user = await currentUser(request, env);
+        if (!user) return json({ ok: false, error: "Please log in" }, 401);
 
-        const amount = Number(data.amount);
-        const upi = String(data.upi || "").trim();
+        const body = await request.json();
+        const amount = Number(body.amount);
+        const utr = String(body.utr || "").trim();
 
-        if (!Number.isSafeInteger(amount) || amount < 1 ||
-            amount > 10000000 || upi.length < 3 || upi.length > 150) {
-          return reply({ ok: false, error: "Invalid amount or UPI ID" }, 400);
+        if (!Number.isFinite(amount) || amount < 1 || amount > 100000 ||
+            !/^[a-zA-Z0-9-]{6,40}$/.test(utr)) {
+          return json({ ok: false, error: "Invalid amount or UTR" }, 400);
         }
 
-        const results = await env.DB.batch([
-          env.DB.prepare(
-            "UPDATE users SET balance = balance - ? WHERE username = ? AND balance >= ?"
-          ).bind(amount, session.username, amount),
-          env.DB.prepare(
-            `INSERT INTO withdrawals (username, amount, upi, status)
-             SELECT ?, ?, ?, 'Pending' WHERE changes() = 1`
-          ).bind(session.username, amount, upi)
-        ]);
+        await run(
+          env.DB,
+          "INSERT INTO deposits (user_id,amount,utr,created_at) VALUES (?,?,?,?)",
+          user.id, amount, utr, Date.now()
+        );
+        return json({ ok: true, message: "Deposit submitted for review" });
+      }
 
-        if (!results[0]?.meta?.changes) {
-          return reply({ ok: false, error: "Insufficient balance" }, 400);
+      if (path === "/api/withdrawals" && method === "POST") {
+        const user = await currentUser(request, env);
+        if (!user) return json({ ok: false, error: "Please log in" }, 401);
+
+        const body = await request.json();
+        const amount = Number(body.amount);
+        const upi = String(body.upi || "").trim();
+
+        if (!Number.isFinite(amount) || amount < 1 ||
+            !/^[\w.-]+@[\w.-]+$/.test(upi)) {
+          return json({ ok: false, error: "Invalid amount or UPI ID" }, 400);
         }
 
-        return reply({ ok: true, message: "Withdrawal request submitted" }, 201);
-      }
-
-      // ADMIN ROUTES
-      if (session.role !== "admin") {
-        return reply({ ok: false, error: "Admin access required" }, 403);
-      }
-
-      if (path === "/api/admin/deposits" && method === "GET") {
         const result = await env.DB.prepare(
-          "SELECT * FROM deposits ORDER BY id DESC LIMIT 500"
-        ).all();
-        return reply({ ok: true, deposits: result.results });
-      }
+          "UPDATE users SET balance = balance - ? WHERE id = ? AND balance >= ?"
+        ).bind(amount, user.id, amount).run();
 
-      if (path === "/api/admin/withdrawals" && method === "GET") {
-        const result = await env.DB.prepare(
-          "SELECT * FROM withdrawals ORDER BY id DESC LIMIT 500"
-        ).all();
-        return reply({ ok: true, withdrawals: result.results });
-      }
-
-      // APPROVE OR REJECT A DEPOSIT
-      if (path === "/api/admin/deposit-status" && method === "POST") {
-        const id = Number(data.id);
-        const status = String(data.status || "");
-        const bonus = Number(data.bonus || 0);
-
-        if (!Number.isSafeInteger(id) || id < 1 ||
-            !["Approved", "Rejected"].includes(status) ||
-            !Number.isSafeInteger(bonus) || bonus < 0 || bonus > 1000000) {
-          return reply({ ok: false, error: "Invalid request" }, 400);
+        if (!result.meta.changes) {
+          return json({ ok: false, error: "Insufficient balance" }, 400);
         }
 
-        const results = await env.DB.batch([
-          env.DB.prepare(
-            "UPDATE deposits SET status = 'Processing', bonus = ? WHERE id = ? AND status = 'Pending'"
-          ).bind(bonus, id),
-          env.DB.prepare(
-            `UPDATE users SET balance = balance +
-              (SELECT amount + bonus FROM deposits WHERE id = ? AND status = 'Processing')
-             WHERE username = (
-              SELECT username FROM deposits WHERE id = ? AND status = 'Processing'
-             ) AND ? = 'Approved'`
-          ).bind(id, id, status),
-          env.DB.prepare(
-            "UPDATE deposits SET status = ? WHERE id = ? AND status = 'Processing'"
-          ).bind(status, id)
-        ]);
-
-        if (!results[0]?.meta?.changes) {
-          return reply({ ok: false, error: "Deposit not found or already processed" }, 409);
-        }
-
-        return reply({ ok: true, message: `Deposit ${status.toLowerCase()}` });
+        await run(
+          env.DB,
+          "INSERT INTO withdrawals (user_id,amount,upi,created_at) VALUES (?,?,?,?)",
+          user.id, amount, upi, Date.now()
+        );
+        return json({ ok: true, message: "Withdrawal submitted for review" });
       }
 
-      // APPROVE OR REJECT A WITHDRAWAL
-      if (path === "/api/admin/withdrawal-status" && method === "POST") {
-        const id = Number(data.id);
-        const status = String(data.status || "");
-
-        if (!Number.isSafeInteger(id) || id < 1 ||
-            !["Approved", "Rejected"].includes(status)) {
-          return reply({ ok: false, error: "Invalid request" }, 400);
+      if (path === "/api/admin" && method === "GET") {
+        const user = await currentUser(request, env);
+        if (!user || user.role !== "admin") {
+          return json({ ok: false, error: "Admin access required" }, 403);
         }
 
-        const results = await env.DB.batch([
+        const users = await query(
+          env.DB, "SELECT id,username,balance,created_at FROM users ORDER BY id DESC"
+        );
+        const deposits = await query(
+          env.DB, `SELECT deposits.*,users.username FROM deposits
+                   JOIN users ON users.id=deposits.user_id ORDER BY deposits.id DESC`
+        );
+        const withdrawals = await query(
+          env.DB, `SELECT withdrawals.*,users.username FROM withdrawals
+                   JOIN users ON users.id=withdrawals.user_id ORDER BY withdrawals.id DESC`
+        );
+
+        return json({
+          ok: true,
+          users: users.results,
+          deposits: deposits.results,
+          withdrawals: withdrawals.results
+        });
+      }
+
+      if (path === "/api/admin/approve-deposit" && method === "POST") {
+        const admin = await currentUser(request, env);
+        if (!admin || admin.role !== "admin") {
+          return json({ ok: false, error: "Admin access required" }, 403);
+        }
+
+        const body = await request.json();
+        const id = Number(body.id);
+        const deposit = await first(
+          env.DB, "SELECT * FROM deposits WHERE id = ? AND status = 'pending'", id
+        );
+        if (!deposit) return json({ ok: false, error: "Pending deposit not found" }, 404);
+
+        await env.DB.batch([
           env.DB.prepare(
-            "UPDATE withdrawals SET status = 'Processing' WHERE id = ? AND status = 'Pending'"
+            "UPDATE deposits SET status='approved' WHERE id=? AND status='pending'"
           ).bind(id),
           env.DB.prepare(
-            `UPDATE users SET balance = balance +
-              (SELECT amount FROM withdrawals WHERE id = ? AND status = 'Processing')
-             WHERE username = (
-              SELECT username FROM withdrawals WHERE id = ? AND status = 'Processing'
-             ) AND ? = 'Rejected'`
-          ).bind(id, id, status),
-          env.DB.prepare(
-            "UPDATE withdrawals SET status = ? WHERE id = ? AND status = 'Processing'"
-          ).bind(status, id)
+            "UPDATE users SET balance=balance+? WHERE id=?"
+          ).bind(deposit.amount, deposit.user_id)
         ]);
 
-        if (!results[0]?.meta?.changes) {
-          return reply({ ok: false, error: "Withdrawal not found or already processed" }, 409);
+        return json({ ok: true, message: "Deposit approved" });
+      }
+
+      if (path === "/api/admin/reject-deposit" && method === "POST") {
+        const admin = await currentUser(request, env);
+        if (!admin || admin.role !== "admin") {
+          return json({ ok: false, error: "Admin access required" }, 403);
+        }
+        const body = await request.json();
+        const result = await run(
+          env.DB,
+          "UPDATE deposits SET status='rejected' WHERE id=? AND status='pending'",
+          Number(body.id)
+        );
+        if (!result.meta.changes) {
+          return json({ ok: false, error: "Pending deposit not found" }, 404);
+        }
+        return json({ ok: true, message: "Deposit rejected" });
+      }
+
+      if (path === "/api/admin/approve-withdrawal" && method === "POST") {
+        const admin = await currentUser(request, env);
+        if (!admin || admin.role !== "admin") {
+          return json({ ok: false, error: "Admin access required" }, 403);
+        }
+        const body = await request.json();
+        const id = Number(body.id);
+        const result = await run(
+          env.DB,
+          "UPDATE withdrawals SET status='approved' WHERE id=? AND status='pending'",
+          id
+        );
+        if (!result.meta.changes) {
+          return json({ ok: false, error: "Pending withdrawal not found" }, 404);
+        }
+        return json({ ok: true, message: "Withdrawal approved; arrange payment manually" });
+      }
+
+      if (path === "/api/admin/reject-withdrawal" && method === "POST") {
+        const admin = await currentUser(request, env);
+        if (!admin || admin.role !== "admin") {
+          return json({ ok: false, error: "Admin access required" }, 403);
+        }
+        const body = await request.json();
+        const withdrawal = await first(
+          env.DB,
+          "SELECT * FROM withdrawals WHERE id=? AND status='pending'",
+          Number(body.id)
+        );
+        if (!withdrawal) {
+          return json({ ok: false, error: "Pending withdrawal not found" }, 404);
         }
 
-        return reply({ ok: true, message: `Withdrawal ${status.toLowerCase()}` });
-      }
-
-      if (path === "/api/admin/settings" && method === "GET") {
-        const result = await env.DB.prepare(
-          "SELECT key, value FROM settings"
-        ).all();
-        return reply({ ok: true, settings: result.results });
-      }
+        await env.DB.batch([
+          env.DB.prepare(
+            "UPDATE withdrawals SET status='rejected' WHERE id=? AND status='pending'"
+          ).bind(withdrawal.id),
+          env.DB.prepare(
+            "UPDATE users SET balance=balance+? WHERE id=?"
+          ).bind(withdrawal.amount, withdrawal.user_id)
+        ]);
+        return json({ ok: true, message: "Withdrawal rejected and balance refunded" });
 
       if (path === "/api/admin/settings" && method === "POST") {
-        const key = String(data.key || "");
-        const value = String(data.value ?? "");
-
-        if (!["upi_id", "telegram_id"].includes(key) || value.length > 200) {
-          return reply({ ok: false, error: "Invalid setting" }, 400);
+        const admin = await currentUser(request, env);
+        if (!admin || admin.role !== "admin") {
+          return json({ ok: false, error: "Admin access required" }, 403);
         }
-
-        await env.DB.prepare(
-          `INSERT INTO settings (key, value) VALUES (?, ?)
-           ON CONFLICT(key) DO UPDATE SET value = excluded.value`
-        ).bind(key, value).run();
-
-        return reply({ ok: true, message: "Setting saved" });
+        const body = await request.json();
+        const allowed = ["upi", "telegram", "support"];
+        for (const key of allowed) {
+          if (typeof body[key] === "string") {
+            await run(
+              env.DB,
+              "INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+              key, body[key].slice(0, 500)
+            );
+          }
+        }
+        return json({ ok: true, message: "Settings updated" });
       }
 
-      return reply({ ok: false, error: "Route not found" }, 404);
-
+      return json({ ok: false, error: "API route not found", path }, 404);
     } catch (error) {
-      if (error?.message?.includes("UNIQUE constraint failed")) {
-        return reply({ ok: false, error: "Username already exists" }, 409);
-      }
-      return reply({ ok: false, error: "Server error" }, 500);
+      return json({
+        ok: false,
+        error: "Server error",
+        detail: String(error?.message || error)
+      }, 500);
     }
   }
 };
