@@ -14,36 +14,18 @@ export default {
     }
 
     try {
-      // Helper function to get data (Handles both D1 and KV)
+      await env.DB.prepare(`
+        CREATE TABLE IF NOT EXISTS app_data (
+          key TEXT PRIMARY KEY,
+          value TEXT
+        )
+      `).run();
+
       const getData = async () => {
-        let rawData = null;
-
-        // Try D1 Database first
-        if (env.DB && typeof env.DB.prepare === "function") {
-          try {
-            await env.DB.prepare(`
-              CREATE TABLE IF NOT EXISTS app_data (
-                key TEXT PRIMARY KEY,
-                value TEXT
-              )
-            `).run();
-            let { results } = await env.DB.prepare("SELECT value FROM app_data WHERE key = 'DB'").all();
-            if (results && results.length > 0) {
-              rawData = results[0].value;
-            }
-          } catch(e) {}
-        } 
-        // Fallback to KV if EM_KV exists
-        else if (env.EM_KV && typeof env.EM_KV.get === "function") {
-          rawData = await env.EM_KV.get("DB");
+        let { results } = await env.DB.prepare("SELECT value FROM app_data WHERE key = 'DB'").all();
+        if (results && results.length > 0) {
+          return JSON.parse(results[0].value);
         }
-
-        if (rawData) {
-          try {
-            return typeof rawData === "string" ? JSON.parse(rawData) : rawData;
-          } catch(e) {}
-        }
-
         return {
           users: {},
           deps: [],
@@ -52,19 +34,13 @@ export default {
         };
       };
 
-      // Helper function to save data
       const saveData = async (data) => {
         const strData = JSON.stringify(data);
-        if (env.DB && typeof env.DB.prepare === "function") {
-          await env.DB.prepare(
-            "INSERT INTO app_data (key, value) VALUES ('DB', ?) ON CONFLICT(key) DO UPDATE SET value = ?"
-          ).bind(strData, strData).run();
-        } else if (env.EM_KV && typeof env.EM_KV.put === "function") {
-          await env.EM_KV.put("DB", strData);
-        }
+        await env.DB.prepare(
+          "INSERT INTO app_data (key, value) VALUES ('DB', ?) ON CONFLICT(key) DO UPDATE SET value = ?"
+        ).bind(strData, strData).run();
       };
 
-      // 1. Get All Data
       if (path === "/api/get-data" && request.method === "GET") {
         const db = await getData();
         return new Response(JSON.stringify(db), {
@@ -81,7 +57,6 @@ export default {
         }
       }
 
-      // 2. Register User
       if (path === "/api/register" && request.method === "POST") {
         const name = body.name || "";
         const user = body.user || "";
@@ -93,16 +68,11 @@ export default {
         }
         
         let db = await getData();
-        if (db.users[u]) {
-          return new Response(JSON.stringify({ success: false, message: "Username already exists" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
-        
         db.users[u] = { name: name.trim(), pass: pass.trim(), bal: 0 };
         await saveData(db);
         return new Response(JSON.stringify({ success: true, message: "Account Created!" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      // 3. Deposit Request
       if (path === "/api/deposit" && request.method === "POST") {
         let db = await getData();
         db.deps.push({
@@ -118,7 +88,6 @@ export default {
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      // 4. Withdraw Request
       if (path === "/api/withdraw" && request.method === "POST") {
         let db = await getData();
         if (!db.users[body.user] || db.users[body.user].bal < body.amt) {
@@ -135,7 +104,6 @@ export default {
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      // 5. Admin Actions
       if (path === "/api/admin-action" && request.method === "POST") {
         let db = await getData();
 
