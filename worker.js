@@ -14,6 +14,15 @@ export default {
     }
 
     try {
+      let body = {};
+      if (request.method === "POST") {
+        try {
+          body = await request.json();
+        } catch (e) {
+          body = {};
+        }
+      }
+
       const getData = async () => {
         let data = await env.EM_KV.get("DB", { type: "json" });
         if (!data) {
@@ -41,14 +50,11 @@ export default {
 
       // 2. Register User
       if (path === "/api/register" && request.method === "POST") {
-        let body = {};
-        try { body = await request.json(); } catch(e) {}
-        
         const name = body.name || "";
         const user = body.user || "";
         const pass = body.pass || "";
-        
         const u = user.trim().toLowerCase();
+
         if (!name || !u || !pass) {
           return new Response(JSON.stringify({ success: false, message: "Sab fields bharo" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
@@ -65,9 +71,6 @@ export default {
 
       // 3. Deposit Request
       if (path === "/api/deposit" && request.method === "POST") {
-        let body = {};
-        try { body = await request.json(); } catch(e) {}
-        
         let db = await getData();
         db.deps.push({
           id: Date.now(),
@@ -84,9 +87,6 @@ export default {
 
       // 4. Withdraw Request
       if (path === "/api/withdraw" && request.method === "POST") {
-        let body = {};
-        try { body = await request.json(); } catch(e) {}
-        
         let db = await getData();
         if (!db.users[body.user] || db.users[body.user].bal < body.amt) {
           return new Response(JSON.stringify({ success: false, message: "Balance kam hai" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -104,8 +104,6 @@ export default {
 
       // 5. Admin Actions
       if (path === "/api/admin-action" && request.method === "POST") {
-        let body = {};
-        try { body = await request.json(); } catch(e) {}
         let db = await getData();
 
         if (body.action === "appD") {
@@ -131,7 +129,7 @@ export default {
         } else if (body.action === "updateTG") {
           db.cfg.tg = body.tg;
         } else if (body.action === "resetPass") {
-          let u = body.user.toLowerCase();
+          let u = body.user ? body.user.toLowerCase() : "";
           if (db.users[u]) {
             db.users[u].pass = body.pass;
           }
