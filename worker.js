@@ -14,30 +14,31 @@ export default {
     }
 
     try {
-      let body = {};
-      if (request.method === "POST") {
-        try {
-          body = await request.json();
-        } catch (e) {
-          body = {};
-        }
-      }
+      // Initialize D1 Table if not exists
+      await env.DB.prepare(`
+        CREATE TABLE IF NOT EXISTS app_data (
+          key TEXT PRIMARY KEY,
+          value TEXT
+        )
+      `).run();
 
       const getData = async () => {
-        let data = await env.EM_KV.get("DB", { type: "json" });
-        if (!data) {
-          data = {
-            users: {},
-            deps: [],
-            wits: [],
-            cfg: { upi: "", tg: "@extramoney67" }
-          };
+        let { results } = await env.DB.prepare("SELECT value FROM app_data WHERE key = 'DB'").all();
+        if (results && results.length > 0) {
+          return JSON.parse(results[0].value);
         }
-        return data;
+        return {
+          users: {},
+          deps: [],
+          wits: [],
+          cfg: { upi: "", tg: "@extramoney67" }
+        };
       };
 
       const saveData = async (data) => {
-        await env.EM_KV.put("DB", JSON.stringify(data));
+        await env.DB.prepare(
+          "INSERT INTO app_data (key, value) VALUES ('DB', ?) ON CONFLICT(key) DO UPDATE SET value = ?"
+        ).bind(JSON.stringify(data), JSON.stringify(data)).run();
       };
 
       // 1. Get All Data
@@ -46,6 +47,15 @@ export default {
         return new Response(JSON.stringify(db), {
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
+      }
+
+      let body = {};
+      if (request.method === "POST") {
+        try {
+          body = await request.json();
+        } catch (e) {
+          body = {};
+        }
       }
 
       // 2. Register User
@@ -86,67 +96,4 @@ export default {
       }
 
       // 4. Withdraw Request
-      if (path === "/api/withdraw" && request.method === "POST") {
-        let db = await getData();
-        if (!db.users[body.user] || db.users[body.user].bal < body.amt) {
-          return new Response(JSON.stringify({ success: false, message: "Balance kam hai" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
-        db.wits.push({
-          id: Date.now(),
-          user: body.user,
-          amt: body.amt,
-          upi: body.upi,
-          status: "Pending"
-        });
-        await saveData(db);
-        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-
-      // 5. Admin Actions
-      if (path === "/api/admin-action" && request.method === "POST") {
-        let db = await getData();
-
-        if (body.action === "appD") {
-          let d = db.deps.find(x => x.id === body.id);
-          if (d && db.users[d.user]) {
-            db.users[d.user].bal += d.total;
-            d.status = "Approved";
-          }
-        } else if (body.action === "rejD") {
-          let d = db.deps.find(x => x.id === body.id);
-          if (d) d.status = "Rejected";
-        } else if (body.action === "appW") {
-          let w = db.wits.find(x => x.id === body.id);
-          if (w && db.users[w.user]) {
-            db.users[w.user].bal -= w.amt;
-            w.status = "Paid";
-          }
-        } else if (body.action === "rejW") {
-          let w = db.wits.find(x => x.id === body.id);
-          if (w) w.status = "Rejected";
-        } else if (body.action === "updateUPI") {
-          db.cfg.upi = body.upi;
-        } else if (body.action === "updateTG") {
-          db.cfg.tg = body.tg;
-        } else if (body.action === "resetPass") {
-          let u = body.user ? body.user.toLowerCase() : "";
-          if (db.users[u]) {
-            db.users[u].pass = body.pass;
-          }
-        }
-
-        await saveData(db);
-        return new Response(JSON.stringify({ success: true, db }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
-      }
-
-      return new Response("Not Found", { status: 404, headers: corsHeaders });
-    } catch (err) {
-      return new Response(JSON.stringify({ success: false, error: err.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-  }
-};
+      if (path
