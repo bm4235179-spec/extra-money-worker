@@ -57,6 +57,21 @@ export default {
         }
       }
 
+      // Secure Admin Login Endpoint
+      if (path === "/api/admin-login" && request.method === "POST") {
+        const adminU = "ExtraMoney_Admin_2026";
+        const adminP = "Em@2026#Secure!X9z";
+        
+        if (body.user === adminU && body.pass === adminP) {
+          return new Response(JSON.stringify({ success: true, isAdmin: true }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+        return new Response(JSON.stringify({ success: false, isAdmin: false }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
       if (path === "/api/register" && request.method === "POST") {
         const name = body.name || "";
         const user = body.user || "";
