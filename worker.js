@@ -108,17 +108,19 @@ table button.r{background:#ef4444}
 <div class="app">
 <div class="toast" id="toast"></div>
 
+<!-- Screen 1 -->
 <div class="screen active" id="s1">
   <div style="flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center">
     <div class="logo">EM</div>
     <h1 class="brand">EXTRA MONEY</h1>
     <p class="sub">⚡ Fast • Secure • Instant Rewards ⚡</p>
-    <button class="btn btn1" id="b1">🚀 Create Account</button>
-    <button class="btn btn2" id="b2">🔐 Sign In</button>
+    <button class="btn btn1" onclick="go('s2')">🚀 Create Account</button>
+    <button class="btn btn2" onclick="go('s3')">🔐 Sign In</button>
     <a class="link" id="tgLinkFront" href="#" target="_blank">📞 Customer Support</a>
   </div>
 </div>
 
+<!-- Screen 2 -->
 <div class="screen" id="s2">
   <h2 style="color:#10b981;font-weight:800;font-size:1.6rem">Create Account</h2>
   <p class="sub" style="text-align:left;margin-top:4px">Join today and start earning rewards</p>
@@ -126,93 +128,98 @@ table button.r{background:#ef4444}
   <input class="inp" id="su_user" placeholder="Username">
   <input class="inp" id="su_pass" type="password" placeholder="Password">
   <input class="inp" id="su_ref" placeholder="Referral Code (Optional)">
-  <button class="btn btn1" id="b3">✨ Register Now</button>
-  <a class="link" id="b4">Already have an account? Sign In</a>
-  <a class="link" id="b5">← Back to Home</a>
+  <button class="btn btn1" onclick="doRegister()">✨ Register Now</button>
+  <a class="link" onclick="go('s3')">Already have an account? Sign In</a>
+  <a class="link" onclick="go('s1')">← Back to Home</a>
 </div>
 
+<!-- Screen 3 -->
 <div class="screen" id="s3">
   <h2 style="color:#10b981;font-weight:800;font-size:1.6rem">Welcome Back</h2>
   <p class="sub" style="text-align:left;margin-top:4px">Enter your credentials to access wallet</p>
   <input class="inp" id="si_user" placeholder="Username">
   <input class="inp" id="si_pass" type="password" placeholder="Password">
-  <button class="btn btn1" id="b6">🔓 Secure Sign In</button>
-  <a class="link" id="b7">New user? Create Account</a>
-  <a class="link" id="b8">← Back to Home</a>
+  <button class="btn btn1" onclick="doLogin()">🔓 Secure Sign In</button>
+  <a class="link" onclick="go('s2')">New user? Create Account</a>
+  <a class="link" onclick="go('s1')">← Back to Home</a>
 </div>
 
+<!-- Screen 4 -->
 <div class="screen" id="s4">
   <div class="whead">
     <div><div class="g">Welcome back 👋</div><div class="n" id="w_name">User</div><div class="id" id="w_id">@id</div></div>
-    <div class="dots" id="dots">⋮</div>
+    <div class="dots" id="toggleMenu">⋮</div>
     <div class="dd" id="dd">
-      <a data-i="profile">👤 My Profile</a>
-      <a data-i="deposit">📥 Total Deposits</a>
-      <a data-i="withdraw">📤 Total Withdrawals</a>
-      <a data-i="transaction">📋 History</a>
+      <a onclick="openInfo('profile')">👤 My Profile</a>
+      <a onclick="openInfo('deposit')">📥 Total Deposits</a>
+      <a onclick="openInfo('withdraw')">📤 Total Withdrawals</a>
+      <a onclick="openInfo('transaction')">📋 History</a>
       <a id="ddSupport" href="#" target="_blank">📞 Support</a>
     </div>
   </div>
   <div class="wal"><span class="s">WALLET BALANCE</span><b class="b" id="w_bal">Rs0</b></div>
-  <button class="btn btn1" id="b9">➕ Add Money</button>
-  <button class="btn btn2" id="b10">💸 Withdraw Funds</button>
-  <button class="btn" id="b_invite" style="background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none">💬 Invite on WhatsApp (Earn ₹50)</button>
+  <button class="btn btn1" onclick="go('s5')">➕ Add Money</button>
+  <button class="btn btn2" onclick="go('s6')">💸 Withdraw Funds</button>
+  <button class="btn" onclick="shareWhatsApp()" style="background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none">💬 Invite on WhatsApp (Earn ₹50)</button>
   <div class="card" id="w_hist"></div>
-  <button class="btn btnr" id="b11" style="margin-top:20px">🚪 Logout Account</button>
+  <button class="btn btnr" onclick="doLogout()" style="margin-top:20px">🚪 Logout Account</button>
 </div>
 
+<!-- Screen 5 -->
 <div class="screen" id="s5">
   <h2 style="color:#10b981;font-weight:800;font-size:1.6rem">Add Money</h2>
   <p class="sub" style="text-align:left;margin-top:4px">Get 5% instant bonus on every deposit</p>
-  <input class="inp" id="dep_amt" type="number" placeholder="Enter Amount (e.g. 2500)" min="100">
+  <input class="inp" id="dep_amt" type="number" placeholder="Enter Amount (e.g. 2500)" min="100" oninput="calcBonus()">
   <div class="card">You will receive: <b id="dep_prev" style="color:#10b981;font-size:1.1rem">Rs0</b></div>
   <div class="upi" id="upiSec" style="display:none">
     <p style="font-size:12px;color:#9ca3af">Pay to Merchant UPI:</p>
     <h3 id="showUPI">Not Set</h3>
     <p style="font-size:13px;color:#d1d5db;margin-bottom:14px" id="showAmt"></p>
-    <button class="btn btn1" id="b12">💳 Pay via UPI App</button>
+    <button class="btn btn1" onclick="payViaUPI()">💳 Pay via UPI App</button>
   </div>
-  <button class="btn btn1" id="b14">💰 Proceed to Pay</button>
-  <button class="btn btn2" id="b15">← Back to Dashboard</button>
+  <button class="btn btn1" id="btnProceed" onclick="proceedPay()">💰 Proceed to Pay</button>
+  <button class="btn btn2" onclick="go('s4')">← Back to Dashboard</button>
 </div>
 
+<!-- Screen 6 -->
 <div class="screen" id="s6">
   <h2 style="color:#10b981;font-weight:800;font-size:1.6rem">Withdraw Funds</h2>
   <p class="sub" style="text-align:left;margin-top:4px">Transfer funds directly to your UPI ID</p>
   <input class="inp" id="wit_amt" type="number" placeholder="Enter Amount">
   <input class="inp" id="wit_upi" placeholder="Your UPI ID (e.g. name@paytm)">
-  <button class="btn btn1" id="b16">📤 Request Withdrawal</button>
-  <button class="btn btn2" id="b17">← Back to Dashboard</button>
+  <button class="btn btn1" onclick="requestWithdraw()">📤 Request Withdrawal</button>
+  <button class="btn btn2" onclick="go('s4')">← Back to Dashboard</button>
 </div>
 
+<!-- Screen 7 -->
 <div class="screen" id="s7">
   <h2 style="color:#10b981;font-weight:800;font-size:1.6rem">⚙️ Admin Panel</h2>
   <div class="card">
     <p style="font-size:12px;color:#9ca3af">Current Merchant UPI:</p>
     <h3 id="admUPI" style="color:#10b981;word-break:break-all;margin:6px 0">Not Set</h3>
     <input class="inp" id="newUPI" placeholder="New UPI ID">
-    <button class="btn btn1" id="b18">✅ Update UPI</button>
+    <button class="btn btn1" onclick="updateAdminUPI()">✅ Update UPI</button>
   </div>
   <div class="card">
     <h3 style="color:#10b981;font-size:14px;font-weight:700">📞 Support Telegram Link</h3>
     <p style="font-size:12px;color:#9ca3af;margin:6px 0">Current: <b id="admTG" style="color:#fff"></b></p>
     <input class="inp" id="newTG" placeholder="@username or https://t.me/...">
-    <button class="btn btn1" id="b21">🔗 Update Support Link</button>
+    <button class="btn btn1" onclick="updateAdminTG()">🔗 Update Support Link</button>
   </div>
   <div class="card" style="border-color:rgba(239,68,68,0.3)">
     <h3 style="color:#ef4444;font-size:14px;font-weight:700">🔑 Reset User Password</h3>
     <input class="inp" id="rsUser" placeholder="Username">
     <input class="inp" id="rsPass" placeholder="New Password">
-    <button class="btn btnr" id="b20">Reset Password</button>
+    <button class="btn btnr" onclick="resetUserPass()">Reset Password</button>
   </div>
   <div class="card"><h3 style="color:#10b981;font-size:14px;font-weight:700">📥 Pending Deposits</h3><table id="depT"></table></div>
   <div class="card"><h3 style="color:#10b981;font-size:14px;font-weight:700">📤 Pending Withdrawals</h3><table id="witT"></table></div>
   <div class="card"><h3 style="color:#10b981;font-size:14px;font-weight:700">👥 All Users</h3><table id="userT"></table></div>
-  <button class="btn btnr" id="b19" style="margin-top:20px">🚪 Logout Admin</button>
+  <button class="btn btnr" onclick="go('s1')" style="margin-top:20px">🚪 Logout Admin</button>
 </div>
 </div>
 
-<div class="modal" id="modal"><div class="mcard" id="modalC"></div></div>
+<div class="modal" id="modal" onclick="if(event.target===this) closeM()"><div class="mcard" id="modalC"></div></div>
 
 <script>
 var API_URL = "";
@@ -226,6 +233,7 @@ window.addEventListener('DOMContentLoaded', function() {
     document.getElementById('su_ref').value = refParam;
     go('s2');
   }
+  fetchData();
 });
 
 function toast(m, e) {
@@ -300,11 +308,24 @@ function go(id) {
     if (id === 's7') refAdmin();
     if (id === 's5') {
       document.getElementById('upiSec').style.display = 'none';
-      document.getElementById('b14').style.display = 'block';
+      document.getElementById('btnProceed').style.display = 'block';
     }
     window.scrollTo(0, 0);
   });
 }
+
+document.getElementById('toggleMenu').onclick = function(e) {
+  e.stopPropagation();
+  document.getElementById('dd').classList.toggle('show');
+};
+
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('dd');
+  var tm = document.getElementById('toggleMenu');
+  if (dd && tm && !dd.contains(e.target) && e.target !== tm) {
+    dd.classList.remove('show');
+  }
+});
 
 function refWallet() {
   if (!cur || !dbData.users[cur]) return;
@@ -367,18 +388,6 @@ window.rejD = function(id) { sendAdminAction({ action: 'rejD', id: id }); };
 window.appW = function(id) { sendAdminAction({ action: 'appW', id: id }); };
 window.rejW = function(id) { sendAdminAction({ action: 'rejW', id: id }); };
 
-document.getElementById('dots').onclick = function(e) { e.stopPropagation(); document.getElementById('dd').classList.toggle('show'); };
-document.addEventListener('click', function(e) { var dd = document.getElementById('dd'); if (!dd.contains(e.target) && e.target !== document.getElementById('dots')) dd.classList.remove('show'); });
-
-var ml = document.querySelectorAll('#dd a[data-i]');
-for (var i = 0; i < ml.length; i++) {
-  ml[i].onclick = function(e) {
-    e.preventDefault();
-    document.getElementById('dd').classList.remove('show');
-    openInfo(this.getAttribute('data-i'));
-  };
-}
-
 function openInfo(t) {
   if (!cur || !dbData.users[cur]) return;
   var u = dbData.users[cur], h = '';
@@ -413,12 +422,8 @@ function openInfo(t) {
 }
 
 window.closeM = function() { document.getElementById('modal').classList.remove('show'); };
-document.getElementById('modal').onclick = function(e) { if (e.target === this) closeM(); };
 
-document.getElementById('b1').onclick = function() { go('s2'); };
-document.getElementById('b2').onclick = function() { go('s3'); };
-
-document.getElementById('b3').onclick = async function() {
+async function doRegister() {
   var n = document.getElementById('su_name').value.trim();
   var u = document.getElementById('su_user').value.trim().toLowerCase();
   var p = document.getElementById('su_pass').value.trim();
@@ -444,20 +449,17 @@ document.getElementById('b3').onclick = async function() {
   } catch (err) {
     toast('❌ Network Error', 1);
   }
-};
+}
 
-document.getElementById('b4').onclick = function() { go('s3'); };
-document.getElementById('b5').onclick = function() { go('s1'); };
-
-document.getElementById('b_invite').onclick = function() {
+function shareWhatsApp() {
   if (!cur) return;
   var appUrl = window.location.origin + window.location.pathname + '?ref=' + cur;
   var message = "🔥 Join Extra Money App & earn rewards!\n\nSign up using my link: " + appUrl;
   var whatsappUrl = "whatsapp://send?text=" + encodeURIComponent(message);
   window.location.href = whatsappUrl;
-};
+}
 
-document.getElementById('b6').onclick = async function() {
+async function doLogin() {
   var u = document.getElementById('si_user').value.trim().toLowerCase();
   var p = document.getElementById('si_pass').value.trim();
 
@@ -488,21 +490,21 @@ document.getElementById('b6').onclick = async function() {
   } else {
     toast('❌ Invalid username or password', 1);
   }
-};
+}
 
-document.getElementById('b7').onclick = function() { go('s2'); };
-document.getElementById('b8').onclick = function() { go('s1'); };
-document.getElementById('b9').onclick = function() { go('s5'); };
-document.getElementById('b10').onclick = function() { go('s6'); };
-document.getElementById('b11').onclick = function() { cur = ""; toast('👋 Logged Out'); go('s1'); };
+function doLogout() {
+  cur = "";
+  toast('👋 Logged Out');
+  go('s1');
+}
 
-document.getElementById('dep_amt').addEventListener('input', function() {
-  var a = parseInt(this.value) || 0;
+function calcBonus() {
+  var a = parseInt(document.getElementById('dep_amt').value) || 0;
   var b = Math.round(a * 0.05);
   document.getElementById('dep_prev').innerText = 'Rs' + (a + b) + ' (Includes 5% bonus)';
-});
+}
 
-document.getElementById('b14').onclick = function() {
+function proceedPay() {
   var a = parseInt(document.getElementById('dep_amt').value);
   if (!a || a < 100) { toast('⚠️ Minimum amount is Rs100', 1); return; }
   if (!dbData.cfg.upi) { toast('⚠️ UPI not configured by admin', 1); return; }
@@ -511,10 +513,10 @@ document.getElementById('b14').onclick = function() {
   document.getElementById('showUPI').innerText = dbData.cfg.upi;
   document.getElementById('showAmt').innerText = 'Pay Rs' + a + ' → Get Rs' + (a + b);
   document.getElementById('upiSec').style.display = 'block';
-  document.getElementById('b14').style.display = 'none';
-};
+  document.getElementById('btnProceed').style.display = 'none';
+}
 
-document.getElementById('b12').onclick = async function() {
+async function payViaUPI() {
   if (!curDepAmt) return;
   if (!dbData.cfg.upi) { toast('⚠️ UPI not set', 1); return; }
   
@@ -547,18 +549,16 @@ document.getElementById('b12').onclick = async function() {
         document.getElementById('dep_amt').value = '';
         curDepAmt = 0;
         document.getElementById('upiSec').style.display = 'none';
-        document.getElementById('b14').style.display = 'block';
+        document.getElementById('btnProceed').style.display = 'block';
         go('s4');
       }, 1000);
     }
   } catch (err) {
     toast('❌ Network Error', 1);
   }
-};
+}
 
-document.getElementById('b15').onclick = function() { go('s4'); };
-
-document.getElementById('b16').onclick = async function() {
+async function requestWithdraw() {
   var a = parseInt(document.getElementById('wit_amt').value);
   var u = document.getElementById('wit_upi').value.trim();
   if (!a || !u) { toast('⚠️ Enter amount and UPI ID', 1); return; }
@@ -583,26 +583,24 @@ document.getElementById('b16').onclick = async function() {
   } catch (err) {
     toast('❌ Network Error', 1);
   }
-};
+}
 
-document.getElementById('b17').onclick = function() { go('s4'); };
-
-document.getElementById('b18').onclick = function() {
+function updateAdminUPI() {
   var v = document.getElementById('newUPI').value.trim();
   if (!v) { toast('⚠️ Enter UPI ID', 1); return; }
   if (!v.includes('@')) { toast('⚠️ Enter valid UPI ID', 1); return; }
   sendAdminAction({ action: 'updateUPI', upi: v });
   document.getElementById('newUPI').value = '';
-};
+}
 
-document.getElementById('b21').onclick = function() {
+function updateAdminTG() {
   var v = document.getElementById('newTG').value.trim();
   if (!v) { toast('⚠️ Enter Telegram link', 1); return; }
   sendAdminAction({ action: 'updateTG', tg: v });
   document.getElementById('newTG').value = '';
-};
+}
 
-document.getElementById('b20').onclick = function() {
+function resetUserPass() {
   var u = document.getElementById('rsUser').value.trim().toLowerCase();
   var p = document.getElementById('rsPass').value.trim();
   if (!u || !p) { toast('⚠️ Enter username & password', 1); return; }
@@ -610,11 +608,7 @@ document.getElementById('b20').onclick = function() {
   sendAdminAction({ action: 'resetPass', user: u, pass: p });
   document.getElementById('rsUser').value = '';
   document.getElementById('rsPass').value = '';
-};
-
-document.getElementById('b19').onclick = function() { toast('👋 Admin Logged Out'); go('s1'); };
-
-fetchData();
+}
 </script>
 </body>
 </html>`;
