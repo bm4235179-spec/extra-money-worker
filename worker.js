@@ -14,21 +14,27 @@ export default {
     const ADMIN_USER = "ExtraMoney_Admin_2026";
     const ADMIN_PASS = "Em@2026#Secure!X9z";
 
-    // Initialize database if not exists
+    // 1. Safe getDB function jo purane data ko protect rakhega
     async function getDB() {
-      let row = await env.DB.prepare("SELECT val FROM app_data WHERE id = 'DB'").first();
-      if (!row) {
-        const initial = JSON.stringify({
-          users: {},
-          deps: [],
-          wits: [],
-          refs: [],
-          cfg: { upi: "", tg: "@extramoney67" }
-        });
-        await env.DB.prepare("INSERT INTO app_data (id, val) VALUES ('DB', ?)").bind(initial).run();
-        return JSON.parse(initial);
+      try {
+        let row = await env.DB.prepare("SELECT val FROM app_data WHERE id = 'DB'").first();
+        if (!row || !row.val) {
+          const initial = JSON.stringify({
+            users: {},
+            deps: [],
+            wits: [],
+            refs: [],
+            cfg: { upi: "", tg: "@extramoney67" }
+          });
+          // Agar row nahi hai tabhi insert karega
+          await env.DB.prepare("INSERT OR IGNORE INTO app_data (id, val) VALUES ('DB', ?)").bind(initial).run();
+          return JSON.parse(initial);
+        }
+        return JSON.parse(row.val);
+      } catch (err) {
+        console.error("getDB error:", err);
+        return { users: {}, deps: [], wits: [], refs: [], cfg: { upi: "", tg: "@extramoney67" } };
       }
-      return JSON.parse(row.val);
     }
 
     async function saveDB(data) {
@@ -42,7 +48,7 @@ export default {
         return new Response(JSON.stringify(db), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      // 2. Register API (with auto-referral ₹50 bonus)
+      // 2. Register API
       if (url.pathname === "/api/register" && request.method === "POST") {
         let { name, user, pass, ref } = await request.json();
         user = user.trim().toLowerCase();
@@ -57,8 +63,8 @@ export default {
 
         if (ref && db.users[ref]) {
           refBy = ref;
-          initialBal = 0; // New user starts with 0, referrer gets bonus
-          db.users[ref].bal += 50; // ₹50 referral bonus credited to referrer
+          initialBal = 0;
+          db.users[ref].bal += 50; // Referrer bonus
           db.refs.push({ id: Date.now(), referrer: ref, referred: user, amt: 50 });
         }
 
@@ -77,7 +83,7 @@ export default {
         return new Response(JSON.stringify({ success: false }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      // 4. Deposit Request API (Auto-creates pending deposit without manual UTR)
+      // 4. Deposit Request API
       if (url.pathname === "/api/deposit" && request.method === "POST") {
         let { user, amt, bonus, total, utr } = await request.json();
         let db = await getDB();
@@ -118,7 +124,7 @@ export default {
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      // 6. Admin Actions API (Approve/Reject deposits/withdrawals, update UPI/Telegram, reset password)
+      // 6. Admin Actions API
       if (url.pathname === "/api/admin-action" && request.method === "POST") {
         let body = await request.json();
         let db = await getDB();
@@ -146,7 +152,7 @@ export default {
           if (wit && wit.status === "Pending") {
             wit.status = "Cancelled";
             if (db.users[wit.user]) {
-              db.users[wit.user].bal += wit.amt; // Refund back to user balance
+              db.users[wit.user].bal += wit.amt;
             }
           }
         } else if (body.action === "updateUPI") {
