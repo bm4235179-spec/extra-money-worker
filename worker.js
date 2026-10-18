@@ -47,7 +47,11 @@ export default {
 
       if (url.pathname === "/api/register" && request.method === "POST") {
         let { name, user, pass, ref } = await request.json();
+        if (!user || !pass) {
+          return new Response(JSON.stringify({ success: false, message: "Username and password required" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
         user = user.trim().toLowerCase();
+        let cleanRef = ref ? ref.trim().toLowerCase() : "";
         
         let db = await getDB();
         if (db.users[user]) {
@@ -57,14 +61,14 @@ export default {
         let refBy = "";
         let initialBal = 0;
 
-        if (ref && db.users[ref]) {
-          refBy = ref;
+        if (cleanRef && db.users[cleanRef]) {
+          refBy = cleanRef;
           initialBal = 0;
-          db.users[ref].bal += 50; 
-          db.refs.push({ id: Date.now(), referrer: ref, referred: user, amt: 50 });
+          db.users[cleanRef].bal += 50; 
+          db.refs.push({ id: Date.now(), referrer: cleanRef, referred: user, amt: 50 });
         }
 
-        db.users[user] = { name, pass, bal: initialBal, refBy };
+        db.users[user] = { name: name || user, pass, bal: initialBal, refBy };
         await saveDB(db);
 
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -80,6 +84,10 @@ export default {
 
       if (url.pathname === "/api/deposit" && request.method === "POST") {
         let { user, amt, bonus, total, utr } = await request.json();
+        if (!user) {
+          return new Response(JSON.stringify({ success: false, message: "User not specified" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        user = user.trim().toLowerCase();
         let db = await getDB();
         
         db.deps.push({
@@ -98,6 +106,10 @@ export default {
 
       if (url.pathname === "/api/withdraw" && request.method === "POST") {
         let { user, amt, upi } = await request.json();
+        if (!user) {
+          return new Response(JSON.stringify({ success: false, message: "User not specified" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        user = user.trim().toLowerCase();
         let db = await getDB();
 
         if (!db.users[user] || db.users[user].bal < amt) {
@@ -125,8 +137,9 @@ export default {
           let dep = db.deps.find(d => d.id === body.id);
           if (dep && dep.status === "Pending") {
             dep.status = "Approved";
-            if (db.users[dep.user]) {
-              db.users[dep.user].bal += dep.total;
+            let depUser = dep.user.trim().toLowerCase();
+            if (db.users[depUser]) {
+              db.users[depUser].bal += dep.total;
             }
           }
         } else if (body.action === "rejD") {
@@ -143,8 +156,9 @@ export default {
           let wit = db.wits.find(w => w.id === body.id);
           if (wit && wit.status === "Pending") {
             wit.status = "Cancelled";
-            if (db.users[wit.user]) {
-              db.users[wit.user].bal += wit.amt;
+            let witUser = wit.user.trim().toLowerCase();
+            if (db.users[witUser]) {
+              db.users[witUser].bal += wit.amt;
             }
           }
         } else if (body.action === "updateUPI") {
@@ -152,8 +166,9 @@ export default {
         } else if (body.action === "updateTG") {
           db.cfg.tg = body.tg;
         } else if (body.action === "resetPass") {
-          if (db.users[body.user]) {
-            db.users[body.user].pass = body.pass;
+          let targetUser = body.user ? body.user.trim().toLowerCase() : "";
+          if (targetUser && db.users[targetUser]) {
+            db.users[targetUser].pass = body.pass;
           }
         }
 
