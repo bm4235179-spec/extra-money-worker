@@ -14,7 +14,7 @@ export default {
     const ADMIN_USER = "ExtraMoney_Admin_2026";
     const ADMIN_PASS = "Em@2026#Secure!X9z";
 
-    // Safe getDB function - purane data ko protect rakhega aur overwrite nahi hone dega
+    // Safe getDB function - purane data ko protect rakhega
     async function getDB() {
       try {
         let row = await env.DB.prepare("SELECT val FROM app_data WHERE id = 'DB'").first();
