@@ -16,15 +16,6 @@ export default {
 
     async function getDB() {
       try {
-        await env.DB.prepare("CREATE TABLE IF NOT EXISTS app_data (id TEXT PRIMARY KEY, val TEXT)").run();
-        
-        // Ensure 'val' column exists if table was created previously without it
-        try {
-          await env.DB.prepare("ALTER TABLE app_data ADD COLUMN val TEXT").run();
-        } catch (e) {
-          // Column already exists, ignore error
-        }
-
         let row = await env.DB.prepare("SELECT val FROM app_data WHERE id = 'DB'").first();
         if (!row || !row.val) {
           const initial = JSON.stringify({
@@ -39,7 +30,22 @@ export default {
         }
         return JSON.parse(row.val);
       } catch (err) {
-        return { users: {}, deps: [], wits: [], refs: [], cfg: { upi: "", tg: "@extramoney67" } };
+        // If table doesn't exist or schema is mismatched, recreate it safely
+        try {
+          await env.DB.prepare("DROP TABLE IF EXISTS app_data").run();
+          await env.DB.prepare("CREATE TABLE app_data (id TEXT PRIMARY KEY, val TEXT)").run();
+          const initial = JSON.stringify({
+            users: {},
+            deps: [],
+            wits: [],
+            refs: [],
+            cfg: { upi: "", tg: "@extramoney67" }
+          });
+          await env.DB.prepare("INSERT INTO app_data (id, val) VALUES ('DB', ?)").bind(initial).run();
+          return JSON.parse(initial);
+        } catch (innerErr) {
+          return { users: {}, deps: [], wits: [], refs: [], cfg: { upi: "", tg: "@extramoney67" } };
+        }
       }
     }
 
