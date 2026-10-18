@@ -16,8 +16,9 @@ export default {
 
     async function getDB() {
       try {
-        let row = await env.DB.prepare("SELECT val FROM app_data WHERE id = 'DB'").first();
-        if (!row || !row.val) {
+        await env.DB.prepare("CREATE TABLE IF NOT EXISTS app_store_v2 (k TEXT PRIMARY KEY, v TEXT)").run();
+        let row = await env.DB.prepare("SELECT v FROM app_store_v2 WHERE k = 'DB'").first();
+        if (!row || !row.v) {
           const initial = JSON.stringify({
             users: {},
             deps: [],
@@ -25,32 +26,17 @@ export default {
             refs: [],
             cfg: { upi: "", tg: "@extramoney67" }
           });
-          await env.DB.prepare("INSERT OR REPLACE INTO app_data (id, val) VALUES ('DB', ?)").bind(initial).run();
+          await env.DB.prepare("INSERT OR REPLACE INTO app_store_v2 (k, v) VALUES ('DB', ?)").bind(initial).run();
           return JSON.parse(initial);
         }
-        return JSON.parse(row.val);
+        return JSON.parse(row.v);
       } catch (err) {
-        // If table doesn't exist or schema is mismatched, recreate it safely
-        try {
-          await env.DB.prepare("DROP TABLE IF EXISTS app_data").run();
-          await env.DB.prepare("CREATE TABLE app_data (id TEXT PRIMARY KEY, val TEXT)").run();
-          const initial = JSON.stringify({
-            users: {},
-            deps: [],
-            wits: [],
-            refs: [],
-            cfg: { upi: "", tg: "@extramoney67" }
-          });
-          await env.DB.prepare("INSERT INTO app_data (id, val) VALUES ('DB', ?)").bind(initial).run();
-          return JSON.parse(initial);
-        } catch (innerErr) {
-          return { users: {}, deps: [], wits: [], refs: [], cfg: { upi: "", tg: "@extramoney67" } };
-        }
+        return { users: {}, deps: [], wits: [], refs: [], cfg: { upi: "", tg: "@extramoney67" } };
       }
     }
 
     async function saveDB(data) {
-      await env.DB.prepare("UPDATE app_data SET val = ? WHERE id = 'DB'").bind(JSON.stringify(data)).run();
+      await env.DB.prepare("UPDATE app_store_v2 SET v = ? WHERE k = 'DB'").bind(JSON.stringify(data)).run();
     }
 
     try {
