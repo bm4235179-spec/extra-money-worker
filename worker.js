@@ -17,6 +17,14 @@ export default {
     async function getDB() {
       try {
         await env.DB.prepare("CREATE TABLE IF NOT EXISTS app_data (id TEXT PRIMARY KEY, val TEXT)").run();
+        
+        // Ensure 'val' column exists if table was created previously without it
+        try {
+          await env.DB.prepare("ALTER TABLE app_data ADD COLUMN val TEXT").run();
+        } catch (e) {
+          // Column already exists, ignore error
+        }
+
         let row = await env.DB.prepare("SELECT val FROM app_data WHERE id = 'DB'").first();
         if (!row || !row.val) {
           const initial = JSON.stringify({
@@ -48,17 +56,14 @@ export default {
       if (url.pathname === "/api/register" && request.method === "POST") {
         try {
           let body = await request.json();
-          let name = body.name;
-          let user = body.user;
-          let pass = body.pass;
-          let ref = body.ref;
+          let name = body.name ? body.name.trim() : "";
+          let user = body.user ? body.user.trim().toLowerCase() : "";
+          let pass = body.pass ? body.pass.trim() : "";
+          let ref = body.ref ? body.ref.trim().toLowerCase() : "";
 
           if (!user || !pass) {
             return new Response(JSON.stringify({ success: false, message: "Username and password required" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
           }
-          
-          user = user.trim().toLowerCase();
-          let cleanRef = ref ? ref.trim().toLowerCase() : "";
           
           let db = await getDB();
           if (db.users[user]) {
@@ -68,11 +73,11 @@ export default {
           let refBy = "";
           let initialBal = 0;
 
-          if (cleanRef && db.users[cleanRef]) {
-            refBy = cleanRef;
+          if (ref && db.users[ref]) {
+            refBy = ref;
             initialBal = 0;
-            db.users[cleanRef].bal += 50; 
-            db.refs.push({ id: Date.now(), referrer: cleanRef, referred: user, amt: 50 });
+            db.users[ref].bal += 50; 
+            db.refs.push({ id: Date.now(), referrer: ref, referred: user, amt: 50 });
           }
 
           db.users[user] = { name: name || user, pass, bal: initialBal, refBy };
@@ -80,7 +85,7 @@ export default {
 
           return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         } catch (regErr) {
-          return new Response(JSON.stringify({ success: false, message: "Server Error: " + regErr.message }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          return new Response(JSON.stringify({ success: false, message: "Registration error: " + regErr.message }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
       }
 
