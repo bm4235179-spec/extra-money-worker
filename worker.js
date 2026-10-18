@@ -24,14 +24,16 @@ export default {
             deps: [],
             wits: [],
             refs: [],
-            cfg: { upi: "", tg: "@extramoney67" }
+            cfg: { upi: "", qr: "", tg: "@extramoney67" }
           });
           await env.DB.prepare("INSERT OR REPLACE INTO app_store_v2 (k, v) VALUES ('DB', ?)").bind(initial).run();
           return JSON.parse(initial);
         }
-        return JSON.parse(row.v);
+        let db = JSON.parse(row.v);
+        if (!db.cfg.qr) db.cfg.qr = "";
+        return db;
       } catch (err) {
-        return { users: {}, deps: [], wits: [], refs: [], cfg: { upi: "", tg: "@extramoney67" } };
+        return { users: {}, deps: [], wits: [], refs: [], cfg: { upi: "", qr: "", tg: "@extramoney67" } };
       }
     }
 
@@ -170,6 +172,8 @@ export default {
           }
         } else if (body.action === "updateUPI") {
           db.cfg.upi = body.upi;
+        } else if (body.action === "updateQR") {
+          db.cfg.qr = body.qr;
         } else if (body.action === "updateTG") {
           db.cfg.tg = body.tg;
         } else if (body.action === "resetPass") {
