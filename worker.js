@@ -31,7 +31,6 @@ export default {
         }
         return JSON.parse(row.val);
       } catch (err) {
-        console.error("getDB error:", err);
         return { users: {}, deps: [], wits: [], refs: [], cfg: { upi: "", tg: "@extramoney67" } };
       }
     }
@@ -53,33 +52,31 @@ export default {
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Plus Jakarta Sans',sans-serif;-webkit-tap-highlight-color:transparent}
 body{background:#030712;color:#f3f4f6;display:flex;justify-content:center;min-height:100vh}
 .app{width:100%;max-width:430px;background:radial-gradient(circle at top,#111827,#030712);min-height:100vh;position:relative;overflow-x:hidden;box-shadow:0 0 50px rgba(0,0,0,0.8)}
-.screen{display:none;padding:24px;min-height:100vh;flex-direction:column;animation:fadeIn .3s ease}
+.screen{display:none;padding:24px;min-height:100vh;flex-direction:column}
 .screen.active{display:flex!important}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .logo{width:88px;height:88px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-radius:28px;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;margin:30px auto 12px;box-shadow:0 12px 30px rgba(16,185,129,0.35)}
 .brand{color:#fff;text-align:center;font-size:1.9rem;font-weight:800;letter-spacing:-0.5px}
 .sub{text-align:center;font-size:13px;color:#9ca3af;margin-top:6px;font-weight:500}
-.btn{width:100%;padding:16px 20px;border:none;border-radius:18px;font-weight:700;font-size:15px;margin-top:14px;cursor:pointer;position:relative;letter-spacing:0.3px;transition:all.2s ease;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn{width:100%;padding:16px 20px;border:none;border-radius:18px;font-weight:700;font-size:15px;margin-top:14px;cursor:pointer;position:relative;letter-spacing:0.3px;display:flex;align-items:center;justify-content:center;gap:10px}
 .btn:active{transform:scale(0.97)}
 .btn1{background:linear-gradient(135deg,#10b981,#059669);color:#fff;box-shadow:0 10px 25px rgba(16,185,129,0.4)}
 .btn2{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);color:#10b981;box-shadow:0 4px 20px rgba(0,0,0,0.2)}
 .btnr{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 8px 20px rgba(239,68,68,0.35)}
-.inp{width:100%;padding:16px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(17,24,39,0.7);color:#fff;margin-top:14px;font-size:15px;outline:none;transition:all.2s}
+.inp{width:100%;padding:16px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(17,24,39,0.7);color:#fff;margin-top:14px;font-size:15px;outline:none}
 .inp:focus{border-color:#10b981;box-shadow:0 0 0 4px rgba(16,185,129,0.15);background:rgba(17,24,39,0.9)}
-.card{background:rgba(17,24,39,0.6);backdrop-filter:blur(12px);border-radius:22px;padding:20px;margin-top:14px;border:1px solid rgba(255,255,255,0.07);box-shadow:0 8px 30px rgba(0,0,0,0.3)}
+.card{background:rgba(17,24,39,0.6);border-radius:22px;padding:20px;margin-top:14px;border:1px solid rgba(255,255,255,0.07);box-shadow:0 8px 30px rgba(0,0,0,0.3)}
 .link{color:#10b981;text-align:center;display:block;margin-top:16px;cursor:pointer;font-size:14px;font-weight:600;text-decoration:none}
 .link:hover{text-decoration:underline}
 .whead{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:20}
 .whead .g{font-size:13px;color:#9ca3af;font-weight:500}
 .whead .n{font-size:20px;font-weight:800;color:#fff;margin-top:2px}
 .whead .id{font-size:12px;color:#10b981;font-weight:600}
-.dots{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#10b981;cursor:pointer;transition:all.2s}
-.dots:hover{background:rgba(16,185,129,0.15)}
+.dots{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#10b981;cursor:pointer}
 .dd{position:absolute;top:55px;left:0;background:#111827;border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:8px;min-width:220px;z-index:100;display:none;flex-direction:column;box-shadow:0 15px 50px rgba(0,0,0,0.7)}
 .dd.show{display:flex}
-.dd a{color:#e5e7eb;text-decoration:none;padding:12px 16px;border-radius:14px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all.15s}
+.dd a{color:#e5e7eb;text-decoration:none;padding:12px 16px;border-radius:14px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:12px;cursor:pointer}
 .dd a:hover{background:rgba(16,185,129,0.15);color:#10b981}
-.wal{width:180px;height:180px;border-radius:50%;background:linear-gradient(135deg,rgba(17,24,39,0.9),rgba(3,7,18,0.9));border:2px solid rgba(16,185,129,0.4);margin:25px auto;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 50px rgba(16,185,129,0.2),inset 0 0 20px rgba(16,185,129,0.1)}
+.wal{width:180px;height:180px;border-radius:50%;background:linear-gradient(135deg,rgba(17,24,39,0.9),rgba(3,7,18,0.9));border:2px solid rgba(16,185,129,0.4);margin:25px auto;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .wal .s{font-size:11px;letter-spacing:1.5px;color:#9ca3af;font-weight:700}
 .wal .b{font-size:28px;color:#10b981;font-weight:800;margin-top:6px}
 .upi{background:rgba(17,24,39,0.8);border:2px dashed rgba(16,185,129,0.4);padding:20px;border-radius:20px;text-align:center;margin-top:16px}
@@ -89,15 +86,15 @@ th,td{border:1px solid rgba(255,255,255,0.08);padding:10px;word-break:break-all;
 th{background:rgba(17,24,39,0.9);color:#10b981;font-weight:700}
 table button{background:#10b981;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;margin:2px}
 table button.r{background:#ef4444}
-.modal{position:fixed;inset:0;background:rgba(3,7,18,0.8);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:300;padding:20px}
+.modal{position:fixed;inset:0;background:rgba(3,7,18,0.8);display:none;align-items:center;justify-content:center;z-index:300;padding:20px}
 .modal.show{display:flex}
 .mcard{background:#111827;border:1px solid rgba(255,255,255,0.12);border-radius:28px;padding:26px;max-width:380px;width:100%;box-shadow:0 25px 70px rgba(0,0,0,0.8);max-height:85vh;overflow-y:auto}
 .mcard h4{color:#10b981;font-size:1.4rem;margin-bottom:18px;font-weight:800}
 .mcard .r{display:flex;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.07);font-size:14px;font-weight:500}
 .mclose{width:100%;margin-top:20px;padding:14px;border-radius:16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;font-weight:700;cursor:pointer}
-.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-100px);background:linear-gradient(135deg,#10b981,#059669);color:#fff;padding:16px 26px;border-radius:18px;font-weight:700;font-size:14px;z-index:1000;transition:transform.35s cubic-bezier(0.175,0.885,0.32,1.275);max-width:90%;text-align:center;box-shadow:0 10px 30px rgba(16,185,129,0.4)}
+.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-100px);background:linear-gradient(135deg,#10b981,#059669);color:#fff;padding:16px 26px;border-radius:18px;font-weight:700;font-size:14px;z-index:1000;transition:transform.35s ease;max-width:90%;text-align:center;box-shadow:0 10px 30px rgba(16,185,129,0.4)}
 .toast.show{transform:translateX(-50%) translateY(0)}
-.toast.e{background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 10px 30px rgba(239,68,68,0.4)}
+.toast.e{background:linear-gradient(135deg,#ef4444,#dc2626)}
 .tx{display:flex;justify-content:space-between;align-items:center;padding:14px;background:rgba(17,24,39,0.5);border-radius:16px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.05)}
 .tx .t{font-weight:700;font-size:14px}
 .tx .d{font-size:12px;color:#9ca3af;margin-top:3px}
@@ -115,8 +112,8 @@ table button.r{background:#ef4444}
     <div class="logo">EM</div>
     <h1 class="brand">EXTRA MONEY</h1>
     <p class="sub">⚡ Fast • Secure • Instant Rewards ⚡</p>
-    <button class="btn btn1" onclick="go('s2')">🚀 Create Account</button>
-    <button class="btn btn2" onclick="go('s3')">🔐 Sign In</button>
+    <button class="btn btn1" onclick="switchScreen('s2')">🚀 Create Account</button>
+    <button class="btn btn2" onclick="switchScreen('s3')">🔐 Sign In</button>
     <a class="link" id="tgLinkFront" href="#" target="_blank">📞 Customer Support</a>
   </div>
 </div>
@@ -129,9 +126,9 @@ table button.r{background:#ef4444}
   <input class="inp" id="su_user" placeholder="Username">
   <input class="inp" id="su_pass" type="password" placeholder="Password">
   <input class="inp" id="su_ref" placeholder="Referral Code (Optional)">
-  <button class="btn btn1" onclick="doRegister()">✨ Register Now</button>
-  <a class="link" onclick="go('s3')">Already have an account? Sign In</a>
-  <a class="link" onclick="go('s1')">← Back to Home</a>
+  <button class="btn btn1" onclick="executeRegister()">✨ Register Now</button>
+  <a class="link" onclick="switchScreen('s3')">Already have an account? Sign In</a>
+  <a class="link" onclick="switchScreen('s1')">← Back to Home</a>
 </div>
 
 <!-- Screen 3 -->
@@ -140,46 +137,46 @@ table button.r{background:#ef4444}
   <p class="sub" style="text-align:left;margin-top:4px">Enter your credentials to access wallet</p>
   <input class="inp" id="si_user" placeholder="Username">
   <input class="inp" id="si_pass" type="password" placeholder="Password">
-  <button class="btn btn1" onclick="doLogin()">🔓 Secure Sign In</button>
-  <a class="link" onclick="go('s2')">New user? Create Account</a>
-  <a class="link" onclick="go('s1')">← Back to Home</a>
+  <button class="btn btn1" onclick="executeLogin()">🔓 Secure Sign In</button>
+  <a class="link" onclick="switchScreen('s2')">New user? Create Account</a>
+  <a class="link" onclick="switchScreen('s1')">← Back to Home</a>
 </div>
 
 <!-- Screen 4 -->
 <div class="screen" id="s4">
   <div class="whead">
     <div><div class="g">Welcome back 👋</div><div class="n" id="w_name">User</div><div class="id" id="w_id">@id</div></div>
-    <div class="dots" id="toggleMenu">⋮</div>
+    <div class="dots" onclick="toggleMenuDD(event)">⋮</div>
     <div class="dd" id="dd">
-      <a onclick="openInfo('profile')">👤 My Profile</a>
-      <a onclick="openInfo('deposit')">📥 Total Deposits</a>
-      <a onclick="openInfo('withdraw')">📤 Total Withdrawals</a>
-      <a onclick="openInfo('transaction')">📋 History</a>
+      <a onclick="openModalInfo('profile')">👤 My Profile</a>
+      <a onclick="openModalInfo('deposit')">📥 Total Deposits</a>
+      <a onclick="openModalInfo('withdraw')">📤 Total Withdrawals</a>
+      <a onclick="openModalInfo('transaction')">📋 History</a>
       <a id="ddSupport" href="#" target="_blank">📞 Support</a>
     </div>
   </div>
   <div class="wal"><span class="s">WALLET BALANCE</span><b class="b" id="w_bal">Rs0</b></div>
-  <button class="btn btn1" onclick="go('s5')">➕ Add Money</button>
-  <button class="btn btn2" onclick="go('s6')">💸 Withdraw Funds</button>
-  <button class="btn" onclick="shareWhatsApp()" style="background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none">💬 Invite on WhatsApp (Earn ₹50)</button>
+  <button class="btn btn1" onclick="switchScreen('s5')">➕ Add Money</button>
+  <button class="btn btn2" onclick="switchScreen('s6')">💸 Withdraw Funds</button>
+  <button class="btn" onclick="shareOnWhatsApp()" style="background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none">💬 Invite on WhatsApp (Earn ₹50)</button>
   <div class="card" id="w_hist"></div>
-  <button class="btn btnr" onclick="doLogout()" style="margin-top:20px">🚪 Logout Account</button>
+  <button class="btn btnr" onclick="executeLogout()" style="margin-top:20px">🚪 Logout Account</button>
 </div>
 
 <!-- Screen 5 -->
 <div class="screen" id="s5">
   <h2 style="color:#10b981;font-weight:800;font-size:1.6rem">Add Money</h2>
   <p class="sub" style="text-align:left;margin-top:4px">Get 5% instant bonus on every deposit</p>
-  <input class="inp" id="dep_amt" type="number" placeholder="Enter Amount (e.g. 2500)" min="100" oninput="calcBonus()">
+  <input class="inp" id="dep_amt" type="number" placeholder="Enter Amount (e.g. 2500)" min="100" oninput="calculateBonus()">
   <div class="card">You will receive: <b id="dep_prev" style="color:#10b981;font-size:1.1rem">Rs0</b></div>
   <div class="upi" id="upiSec" style="display:none">
     <p style="font-size:12px;color:#9ca3af">Pay to Merchant UPI:</p>
     <h3 id="showUPI">Not Set</h3>
     <p style="font-size:13px;color:#d1d5db;margin-bottom:14px" id="showAmt"></p>
-    <button class="btn btn1" onclick="payViaUPI()">💳 Pay via UPI App</button>
+    <button class="btn btn1" onclick="payViaUPIApp()">💳 Pay via UPI App</button>
   </div>
-  <button class="btn btn1" id="btnProceed" onclick="proceedPay()">💰 Proceed to Pay</button>
-  <button class="btn btn2" onclick="go('s4')">← Back to Dashboard</button>
+  <button class="btn btn1" id="b_proceed_pay" onclick="proceedToPay()">💰 Proceed to Pay</button>
+  <button class="btn btn2" onclick="switchScreen('s4')">← Back to Dashboard</button>
 </div>
 
 <!-- Screen 6 -->
@@ -188,8 +185,8 @@ table button.r{background:#ef4444}
   <p class="sub" style="text-align:left;margin-top:4px">Transfer funds directly to your UPI ID</p>
   <input class="inp" id="wit_amt" type="number" placeholder="Enter Amount">
   <input class="inp" id="wit_upi" placeholder="Your UPI ID (e.g. name@paytm)">
-  <button class="btn btn1" onclick="requestWithdraw()">📤 Request Withdrawal</button>
-  <button class="btn btn2" onclick="go('s4')">← Back to Dashboard</button>
+  <button class="btn btn1" onclick="requestWithdrawal()">📤 Request Withdrawal</button>
+  <button class="btn btn2" onclick="switchScreen('s4')">← Back to Dashboard</button>
 </div>
 
 <!-- Screen 7 -->
@@ -199,54 +196,82 @@ table button.r{background:#ef4444}
     <p style="font-size:12px;color:#9ca3af">Current Merchant UPI:</p>
     <h3 id="admUPI" style="color:#10b981;word-break:break-all;margin:6px 0">Not Set</h3>
     <input class="inp" id="newUPI" placeholder="New UPI ID">
-    <button class="btn btn1" onclick="updateAdminUPI()">✅ Update UPI</button>
+    <button class="btn btn1" onclick="adminUpdateUPI()">✅ Update UPI</button>
   </div>
   <div class="card">
     <h3 style="color:#10b981;font-size:14px;font-weight:700">📞 Support Telegram Link</h3>
     <p style="font-size:12px;color:#9ca3af;margin:6px 0">Current: <b id="admTG" style="color:#fff"></b></p>
     <input class="inp" id="newTG" placeholder="@username or https://t.me/...">
-    <button class="btn btn1" onclick="updateAdminTG()">🔗 Update Support Link</button>
+    <button class="btn btn1" onclick="adminUpdateTG()">🔗 Update Support Link</button>
   </div>
   <div class="card" style="border-color:rgba(239,68,68,0.3)">
     <h3 style="color:#ef4444;font-size:14px;font-weight:700">🔑 Reset User Password</h3>
     <input class="inp" id="rsUser" placeholder="Username">
     <input class="inp" id="rsPass" placeholder="New Password">
-    <button class="btn btnr" onclick="resetUserPass()">Reset Password</button>
+    <button class="btn btnr" onclick="adminResetPass()">Reset Password</button>
   </div>
   <div class="card"><h3 style="color:#10b981;font-size:14px;font-weight:700">📥 Pending Deposits</h3><table id="depT"></table></div>
   <div class="card"><h3 style="color:#10b981;font-size:14px;font-weight:700">📤 Pending Withdrawals</h3><table id="witT"></table></div>
   <div class="card"><h3 style="color:#10b981;font-size:14px;font-weight:700">👥 All Users</h3><table id="userT"></table></div>
-  <button class="btn btnr" onclick="go('s1')" style="margin-top:20px">🚪 Logout Admin</button>
+  <button class="btn btnr" onclick="switchScreen('s1')" style="margin-top:20px">🚪 Logout Admin</button>
 </div>
 </div>
 
-<div class="modal" id="modal" onclick="if(event.target===this) closeM()"><div class="mcard" id="modalC"></div></div>
+<div class="modal" id="modal" onclick="if(event.target===this) closeModelInfo()"><div class="mcard" id="modalC"></div></div>
 
 <script>
 var API_URL = "";
-var dbData = { users: {}, deps: [], wits: [], refs: [], cfg: { upi: "", tg: "@extramoney67" } };
-var cur = "", curDepAmt = 0;
+var globalData = { users: {}, deps: [], wits: [], refs: [], cfg: { upi: "", tg: "@extramoney67" } };
+var currentUser = "", selectedDepAmt = 0;
 
-window.addEventListener('DOMContentLoaded', function() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const refParam = urlParams.get('ref');
-  if (refParam) {
-    document.getElementById('su_ref').value = refParam;
-    go('s2');
-  }
-  fetchData();
-});
-
-function toast(m, e) {
+function showToast(msg, isErr) {
   var t = document.getElementById('toast');
-  t.innerText = m;
-  t.className = 'toast' + (e ? ' e' : '');
+  if (!t) return;
+  t.innerText = msg;
+  t.className = 'toast' + (isErr ? ' e' : '');
   t.classList.add('show');
   clearTimeout(window._tt);
-  window._tt = setTimeout(function() { t.classList.remove('show') }, 2500);
+  window._tt = setTimeout(function() { t.classList.remove('show'); }, 2500);
 }
 
-function tgURL(v) {
+function switchScreen(id) {
+  var all = document.querySelectorAll('.screen');
+  for (var i = 0; i < all.length; i++) {
+    all[i].classList.remove('active');
+  }
+  var target = document.getElementById(id);
+  if (target) {
+    target.classList.add('active');
+  }
+  var dd = document.getElementById('dd');
+  if (dd) dd.classList.remove('show');
+
+  if (id === 's4') updateWalletView();
+  if (id === 's7') updateAdminView();
+  if (id === 's5') {
+    var upiSec = document.getElementById('upiSec');
+    var btnProceed = document.getElementById('b_proceed_pay');
+    if (upiSec) upiSec.style.display = 'none';
+    if (btnProceed) btnProceed.style.display = 'block';
+  }
+  window.scrollTo(0, 0);
+  fetchAppData();
+}
+
+function toggleMenuDD(e) {
+  e.stopPropagation();
+  var dd = document.getElementById('dd');
+  if (dd) dd.classList.toggle('show');
+}
+
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('dd');
+  if (dd && !dd.contains(e.target)) {
+    dd.classList.remove('show');
+  }
+});
+
+function getTelegramURL(v) {
   if (!v) return '#';
   v = String(v).trim();
   if (/^https?:\/\//i.test(v)) return v;
@@ -254,31 +279,37 @@ function tgURL(v) {
   return 'https://t.me/' + v;
 }
 
-function refreshUI() {
-  var upiTxt = dbData.cfg.upi || 'Not Set';
-  document.getElementById('showUPI').innerText = upiTxt;
-  document.getElementById('admUPI').innerText = upiTxt;
-  var url = tgURL(dbData.cfg.tg || '@extramoney67');
-  document.getElementById('tgLinkFront').href = url;
-  document.getElementById('ddSupport').href = url;
-  var a = document.getElementById('admTG');
-  if (a) a.innerText = dbData.cfg.tg || '@extramoney67';
+function refreshBaseUI() {
+  var upiTxt = globalData.cfg.upi || 'Not Set';
+  var sUpi = document.getElementById('showUPI');
+  var aUpi = document.getElementById('admUPI');
+  if (sUpi) sUpi.innerText = upiTxt;
+  if (aUpi) aUpi.innerText = upiTxt;
+
+  var tgLink = getTelegramURL(globalData.cfg.tg || '@extramoney67');
+  var fTg = document.getElementById('tgLinkFront');
+  var dSupport = document.getElementById('ddSupport');
+  if (fTg) fTg.href = tgLink;
+  if (dSupport) dSupport.href = tgLink;
+
+  var aTg = document.getElementById('admTG');
+  if (aTg) aTg.innerText = globalData.cfg.tg || '@extramoney67';
 }
 
-async function fetchData() {
+async function fetchAppData() {
   try {
     var res = await fetch(API_URL + '/api/get-data?t=' + Date.now());
     var data = await res.json();
     if (data && data.users) {
-      dbData = data;
+      globalData = data;
     }
   } catch (err) {
     console.error("Fetch error:", err);
   }
-  refreshUI();
+  refreshBaseUI();
 }
 
-async function sendAdminAction(actionObj) {
+async function callAdminActionAPI(actionObj) {
   try {
     var res = await fetch(API_URL + '/api/admin-action', {
       method: 'POST',
@@ -287,68 +318,31 @@ async function sendAdminAction(actionObj) {
     });
     var data = await res.json();
     if (data.success) {
-      dbData = data.db;
-      refAdmin();
-      refreshUI();
-      toast('✅ Success');
+      globalData = data.db;
+      updateAdminView();
+      refreshBaseUI();
+      showToast('✅ Success');
     } else {
-      toast('❌ Failed', 1);
+      showToast('❌ Failed', 1);
     }
   } catch (err) {
-    toast('❌ Network Error', 1);
+    showToast('❌ Network Error', 1);
   }
 }
 
-function go(id) {
-  var all = document.querySelectorAll('.screen');
-  for (var i = 0; i < all.length; i++) all[i].classList.remove('active');
-  var target = document.getElementById(id);
-  if (target) target.classList.add('active');
-  var dd = document.getElementById('dd');
-  if (dd) dd.classList.remove('show');
-
-  if (id === 's4') refWallet();
-  if (id === 's7') refAdmin();
-  if (id === 's5') {
-    var upiSec = document.getElementById('upiSec');
-    var btnProceed = document.getElementById('btnProceed');
-    if (upiSec) upiSec.style.display = 'none';
-    if (btnProceed) btnProceed.style.display = 'block';
-  }
-  window.scrollTo(0, 0);
-  fetchData();
-}
-
-var toggleMenuEl = document.getElementById('toggleMenu');
-if (toggleMenuEl) {
-  toggleMenuEl.onclick = function(e) {
-    e.stopPropagation();
-    var dd = document.getElementById('dd');
-    if (dd) dd.classList.toggle('show');
-  };
-}
-
-document.addEventListener('click', function(e) {
-  var dd = document.getElementById('dd');
-  var tm = document.getElementById('toggleMenu');
-  if (dd && tm && !dd.contains(e.target) && e.target !== tm) {
-    dd.classList.remove('show');
-  }
-});
-
-function refWallet() {
-  if (!cur || !dbData.users[cur]) return;
-  var userObj = dbData.users[cur];
+function updateWalletView() {
+  if (!currentUser || !globalData.users[currentUser]) return;
+  var userObj = globalData.users[currentUser];
   document.getElementById('w_name').innerText = userObj.name;
-  document.getElementById('w_id').innerText = '@' + cur;
+  document.getElementById('w_id').innerText = '@' + currentUser;
   document.getElementById('w_bal').innerText = 'Rs' + userObj.bal;
   
   var allTx = [];
-  dbData.deps.forEach(function(d) {
-    if (d.user === cur) allTx.push({ type: 'Deposit', amt: d.total, status: d.status, time: d.id, sign: '+' });
+  globalData.deps.forEach(function(d) {
+    if (d.user === currentUser) allTx.push({ type: 'Deposit', amt: d.total, status: d.status, time: d.id, sign: '+' });
   });
-  dbData.wits.forEach(function(w) {
-    if (w.user === cur) allTx.push({ type: 'Withdraw', amt: w.amt, status: w.status, time: w.id, sign: '-' });
+  globalData.wits.forEach(function(w) {
+    if (w.user === currentUser) allTx.push({ type: 'Withdraw', amt: w.amt, status: w.status, time: w.id, sign: '-' });
   });
 
   allTx.sort(function(a, b) { return b.time - a.time; });
@@ -366,56 +360,64 @@ function refWallet() {
   document.getElementById('w_hist').innerHTML = h;
 }
 
-function refAdmin() {
-  document.getElementById('admUPI').innerText = dbData.cfg.upi || 'Not Set';
+function updateAdminView() {
+  var au = document.getElementById('admUPI');
+  if (au) au.innerText = globalData.cfg.upi || 'Not Set';
+  
   var dt = document.getElementById('depT');
-  dt.innerHTML = '<tr><th>User</th><th>Total Amt</th><th>Action</th></tr>';
-  dbData.deps.forEach(function(d) {
-    if (d.status === 'Pending') {
-      dt.innerHTML += '<tr><td>' + d.user + '</td><td>Rs' + d.total + '</td><td><button onclick="appD(' + d.id + ')">✓</button><button class="r" onclick="rejD(' + d.id + ')">✗</button></td></tr>';
-    }
-  });
+  if (dt) {
+    dt.innerHTML = '<tr><th>User</th><th>Total Amt</th><th>Action</th></tr>';
+    globalData.deps.forEach(function(d) {
+      if (d.status === 'Pending') {
+        dt.innerHTML += '<tr><td>' + d.user + '</td><td>Rs' + d.total + '</td><td><button onclick="approveDep(' + d.id + ')">✓</button><button class="r" onclick="rejectDep(' + d.id + ')">✗</button></td></tr>';
+      }
+    });
+  }
 
   var wt = document.getElementById('witT');
-  wt.innerHTML = '<tr><th>User</th><th>Amt</th><th>UPI</th><th>Action</th></tr>';
-  dbData.wits.forEach(function(w) {
-    if (w.status === 'Pending') {
-      wt.innerHTML += '<tr><td>' + w.user + '</td><td>' + w.amt + '</td><td>' + w.upi + '</td><td><button onclick="appW(' + w.id + ')">✓</button><button class="r" onclick="rejW(' + w.id + ')">✗</button></td></tr>';
-    }
-  });
+  if (wt) {
+    wt.innerHTML = '<tr><th>User</th><th>Amt</th><th>UPI</th><th>Action</th></tr>';
+    globalData.wits.forEach(function(w) {
+      if (w.status === 'Pending') {
+        wt.innerHTML += '<tr><td>' + w.user + '</td><td>' + w.amt + '</td><td>' + w.upi + '</td><td><button onclick="approveWit(' + w.id + ')">✓</button><button class="r" onclick="rejectWit(' + w.id + ')">✗</button></td></tr>';
+      }
+    });
+  }
 
   var ut = document.getElementById('userT');
-  ut.innerHTML = '<tr><th>User</th><th>Bal</th></tr>';
-  for (var k in dbData.users) {
-    ut.innerHTML += '<tr><td>' + k + '</td><td>Rs' + dbData.users[k].bal + '</td></tr>';
+  if (ut) {
+    ut.innerHTML = '<tr><th>User</th><th>Bal</th></tr>';
+    for (var k in globalData.users) {
+      ut.innerHTML += '<tr><td>' + k + '</td><td>Rs' + globalData.users[k].bal + '</td></tr>';
+    }
   }
-  refreshUI();
+  refreshBaseUI();
 }
 
-window.appD = function(id) { sendAdminAction({ action: 'appD', id: id }); };
-window.rejD = function(id) { sendAdminAction({ action: 'rejD', id: id }); };
-window.appW = function(id) { sendAdminAction({ action: 'appW', id: id }); };
-window.rejW = function(id) { sendAdminAction({ action: 'rejW', id: id }); };
+window.approveDep = function(id) { callAdminActionAPI({ action: 'appD', id: id }); };
+window.rejectDep = function(id) { callAdminActionAPI({ action: 'rejD', id: id }); };
+window.approveWit = function(id) { callAdminActionAPI({ action: 'appW', id: id }); };
+window.rejectWit = function(id) { callAdminActionAPI({ action: 'rejW', id: id }); };
 
-function openInfo(t) {
-  if (!cur || !dbData.users[cur]) return;
-  var u = dbData.users[cur], h = '';
+function openModalInfo(t) {
+  if (!currentUser || !globalData.users[currentUser]) return;
+  var u = globalData.users[currentUser], h = '';
   if (t === 'profile') {
-    h = '<h4>👤 Profile</h4><div class="r"><span>Name</span><span>' + u.name + '</span></div><div class="r"><span>Username</span><span>@' + cur + '</span></div><div class="r"><span>Balance</span><span>Rs' + u.bal + '</span></div><button class="mclose" onclick="closeM()">Close</button>';
+    h = '<h4>👤 Profile</h4><div class="r"><span>Name</span><span>' + u.name + '</span></div><div class="r"><span>Username</span><span>@' + currentUser + '</span></div><div class="r"><span>Balance</span><span>Rs' + u.bal + '</span></div><button class="mclose" onclick="closeModelInfo()">Close</button>';
   } else if (t === 'deposit') {
     var tot = 0, c = 0;
-    dbData.deps.forEach(function(d) { if (d.user === cur && d.status === 'Approved') { tot += d.total; c++; } });
-    var p = dbData.deps.filter(function(d) { return d.user === cur && d.status === 'Pending' }).length;
-    h = '<h4>📥 Deposits</h4><div class="r"><span>Approved</span><span>Rs' + tot + '</span></div><div class="r"><span>Count</span><span>' + c + '</span></div><div class="r"><span>Pending</span><span>' + p + '</span></div><button class="mclose" onclick="closeM()">Close</button>';
+    globalData.deps.forEach(function(d) { if (d.user === currentUser && d.status === 'Approved') { tot += d.total; c++; } });
+    var p = globalData.deps.filter(function(d) { return d.user === currentUser && d.status === 'Pending' }).length;
+    h = '<h4>📥 Deposits</h4><div class="r"><span>Approved</span><span>Rs' + tot + '</span></div><div class="r"><span>Count</span><span>' + c + '</span></div><div class="r"><span>Pending</span><span>' + p + '</span></div><button class="mclose" onclick="closeModelInfo()">Close</button>';
   } else if (t === 'withdraw') {
     var tw = 0, cw = 0;
-    dbData.wits.forEach(function(w) { if (w.user === cur && w.status === 'Paid') { tw += w.amt; cw++; } });
-    var pw = dbData.wits.filter(function(w) { return w.user === cur && w.status === 'Pending' }).length;
-    h = '<h4>📤 Withdrawals</h4><div class="r"><span>Paid</span><span>Rs' + tw + '</span></div><div class="r"><span>Count</span><span>' + cw + '</span></div><div class="r"><span>Pending</span><span>' + pw + '</span></div><button class="mclose" onclick="closeM()">Close</button>';
+    globalData.wits.forEach(function(w) { if (w.user === currentUser && w.status === 'Paid') { tw += w.amt; cw++; } });
+    var pw = globalData.wits.filter(function(w) { return w.user === currentUser && w.status === 'Pending' }).length;
+    h = '<h4>📤 Withdrawals</h4><div class="r"><span>Paid</span><span>Rs' + tw + '</span></div><div class="r"><span>Count</span><span>' + cw + '</span></div><div class="r"><span>Pending</span><span>' + pw + '</span></div><button class="mclose" onclick="closeModelInfo()">Close</button>';
   } else if (t === 'transaction') {
     var all = [];
-    dbData.deps.forEach(function(d) { if (d.user === cur) all.push({ t: 'Deposit', a: d.total, s: d.status, time: d.id, sign: '+' }); });
-    dbData.wits.forEach(function(w) { if (w.user === cur) all.push({ t: 'Withdraw', a: w.amt, s: w.status, time: w.id, sign: '-' }); });
+    globalData.deps.forEach(function(d) { if (d.user === currentUser) all.push({ t: 'Deposit', a: d.total, s: d.status, time: d.id, sign: '+' }); });
+    globalData.wits.forEach(function(w) { if (w.user === currentUser) all.push({ t: 'Withdraw', a: w.amt, s: w.status, time: w.id, sign: '-' }); });
     all.sort(function(a, b) { return b.time - a.time; });
     var rows = '';
     if (all.length === 0) rows = '<div class="r"><span>No transactions</span></div>';
@@ -424,20 +426,22 @@ function openInfo(t) {
       var cl = isDep ? '#10b981' : '#ef4444';
       rows += '<div class="r"><span>' + tx.t + '<br><small style="color:#9ca3af">' + tx.s + '</small></span><span style="color:' + cl + '">' + tx.sign + 'Rs' + tx.a + '</span></div>';
     });
-    h = '<h4>📋 History</h4>' + rows + '<button class="mclose" onclick="closeM()">Close</button>';
+    h = '<h4>📋 History</h4>' + rows + '<button class="mclose" onclick="closeModelInfo()">Close</button>';
   }
   document.getElementById('modalC').innerHTML = h;
   document.getElementById('modal').classList.add('show');
 }
 
-window.closeM = function() { document.getElementById('modal').classList.remove('show'); };
+function closeModelInfo() { 
+  document.getElementById('modal').classList.remove('show'); 
+}
 
-async function doRegister() {
+window.executeRegister = async function() {
   var n = document.getElementById('su_name').value.trim();
   var u = document.getElementById('su_user').value.trim().toLowerCase();
   var p = document.getElementById('su_pass').value.trim();
   var r = document.getElementById('su_ref').value.trim().toLowerCase();
-  if (!n || !u || !p) { toast('⚠️ Please fill all fields', 1); return; }
+  if (!n || !u || !p) { showToast('⚠️ Please fill all fields', 1); return; }
   
   try {
     var res = await fetch(API_URL + '/api/register', {
@@ -447,32 +451,23 @@ async function doRegister() {
     });
     var data = await res.json();
     if (data.success) {
-      toast('✅ Account Created Successfully!');
+      showToast('✅ Account Created Successfully!');
       setTimeout(function() {
         document.getElementById('si_user').value = u;
-        go('s3');
+        switchScreen('s3');
       }, 1000);
     } else {
-      toast('❌ ' + data.message, 1);
+      showToast('❌ ' + data.message, 1);
     }
   } catch (err) {
-    toast('❌ Network Error', 1);
+    showToast('❌ Network Error', 1);
   }
-}
+};
 
-function shareWhatsApp() {
-  if (!cur) return;
-  var appUrl = window.location.origin + window.location.pathname + '?ref=' + cur;
-  var message = "🔥 Join Extra Money App & earn rewards!\n\nSign up using my link: " + appUrl;
-  var whatsappUrl = "whatsapp://send?text=" + encodeURIComponent(message);
-  window.location.href = whatsappUrl;
-}
-
-async function doLogin() {
+window.executeLogin = async function() {
   var u = document.getElementById('si_user').value.trim().toLowerCase();
   var p = document.getElementById('si_pass').value.trim();
-
-  if (!u || !p) { toast('⚠️ Please fill fields', 1); return; }
+  if (!u || !p) { showToast('⚠️ Please fill fields', 1); return; }
 
   try {
     var res = await fetch(API_URL + '/api/admin-login', {
@@ -482,54 +477,60 @@ async function doLogin() {
     });
     var data = await res.json();
     if (data.success && data.isAdmin) {
-      toast('👑 Admin Login Successful');
-      setTimeout(function() { go('s7'); }, 600);
+      showToast('👑 Admin Login Successful');
+      setTimeout(function() { switchScreen('s7'); }, 600);
       return;
     }
   } catch (err) {
     console.error("Admin login error:", err);
   }
 
-  await fetchData();
+  await fetchAppData();
 
-  if (dbData.users[u] && dbData.users[u].pass === p) {
-    cur = u;
-    toast('✅ Welcome ' + dbData.users[u].name);
-    setTimeout(function() { go('s4'); }, 600);
+  if (globalData.users[u] && globalData.users[u].pass === p) {
+    currentUser = u;
+    showToast('✅ Welcome ' + globalData.users[u].name);
+    setTimeout(function() { switchScreen('s4'); }, 600);
   } else {
-    toast('❌ Invalid username or password', 1);
+    showToast('❌ Invalid username or password', 1);
   }
-}
+};
 
-function doLogout() {
-  cur = "";
-  toast('👋 Logged Out');
-  go('s1');
-}
+window.executeLogout = function() {
+  currentUser = '';
+  showToast('👋 Logged Out');
+  switchScreen('s1');
+};
 
-function calcBonus() {
+window.shareOnWhatsApp = function() {
+  if (!currentUser) return;
+  var appUrl = window.location.origin + window.location.pathname + '?ref=' + currentUser;
+  var message = "🔥 Join Extra Money App & earn rewards!\n\nSign up using my link: " + appUrl;
+  window.location.href = "whatsapp://send?text=" + encodeURIComponent(message);
+};
+
+window.calculateBonus = function() {
   var a = parseInt(document.getElementById('dep_amt').value) || 0;
   var b = Math.round(a * 0.05);
   document.getElementById('dep_prev').innerText = 'Rs' + (a + b) + ' (Includes 5% bonus)';
-}
+};
 
-function proceedPay() {
+window.proceedToPay = function() {
   var a = parseInt(document.getElementById('dep_amt').value);
-  if (!a || a < 100) { toast('⚠️ Minimum amount is Rs100', 1); return; }
-  if (!dbData.cfg.upi) { toast('⚠️ UPI not configured by admin', 1); return; }
-  curDepAmt = a;
+  if (!a || a < 100) { showToast('⚠️ Minimum amount is Rs100', 1); return; }
+  if (!globalData.cfg.upi) { showToast('⚠️ UPI not configured by admin', 1); return; }
+  selectedDepAmt = a;
   var b = Math.round(a * 0.05);
-  document.getElementById('showUPI').innerText = dbData.cfg.upi;
+  document.getElementById('showUPI').innerText = globalData.cfg.upi;
   document.getElementById('showAmt').innerText = 'Pay Rs' + a + ' → Get Rs' + (a + b);
   document.getElementById('upiSec').style.display = 'block';
-  document.getElementById('btnProceed').style.display = 'none';
-}
+  document.getElementById('b_proceed_pay').style.display = 'none';
+};
 
-async function payViaUPI() {
-  if (!curDepAmt) return;
-  if (!dbData.cfg.upi) { toast('⚠️ UPI not set', 1); return; }
-  
-  var a = curDepAmt;
+window.payViaUPIApp = async function() {
+  if (!selectedDepAmt) return;
+  if (!globalData.cfg.upi) { showToast('⚠️ UPI not set', 1); return; }
+  var a = selectedDepAmt;
   var b = Math.round(a * 0.05);
   var autoUtr = "APP_PAY_" + Date.now();
 
@@ -537,87 +538,91 @@ async function payViaUPI() {
     var res = await fetch(API_URL + '/api/deposit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user: cur, amt: a, bonus: b, total: a + b, utr: autoUtr })
+      body: JSON.stringify({ user: currentUser, amt: a, bonus: b, total: a + b, utr: autoUtr })
     });
     var data = await res.json();
     if (data.success) {
-      toast('✅ Request sent! Opening Payment App...');
-      
-      var payeeAddress = dbData.cfg.upi;
-      var payeeName = "ExtraMoney";
-      var transactionNote = "AddMoney_" + cur;
-
-      var intentUrl = "intent://pay?pa=" + encodeURIComponent(payeeAddress) + 
-                      "&pn=" + encodeURIComponent(payeeName) + 
-                      "&am=" + a + 
-                      "&cu=INR&tn=" + encodeURIComponent(transactionNote) + 
+      showToast('✅ Request sent! Opening Payment App...');
+      var intentUrl = "intent://pay?pa=" + encodeURIComponent(globalData.cfg.upi) + 
+                      "&pn=ExtraMoney&am=" + a + 
+                      "&cu=INR&tn=" + encodeURIComponent("AddMoney_" + currentUser) + 
                       "#Intent;scheme=upi;package=net.one97.paytm;end;";
 
       setTimeout(function() {
         window.location.href = intentUrl;
         document.getElementById('dep_amt').value = '';
-        curDepAmt = 0;
+        selectedDepAmt = 0;
         document.getElementById('upiSec').style.display = 'none';
-        document.getElementById('btnProceed').style.display = 'block';
-        go('s4');
+        document.getElementById('b_proceed_pay').style.display = 'block';
+        switchScreen('s4');
       }, 1000);
     }
   } catch (err) {
-    toast('❌ Network Error', 1);
+    showToast('❌ Network Error', 1);
   }
-}
+};
 
-async function requestWithdraw() {
+window.requestWithdrawal = async function() {
   var a = parseInt(document.getElementById('wit_amt').value);
   var u = document.getElementById('wit_upi').value.trim();
-  if (!a || !u) { toast('⚠️ Enter amount and UPI ID', 1); return; }
-  if (!cur || !dbData.users[cur]) return;
-  if (dbData.users[cur].bal < a) { toast('❌ Insufficient balance', 1); return; }
+  if (!a || !u) { showToast('⚠️ Enter amount and UPI ID', 1); return; }
+  if (!currentUser || !globalData.users[currentUser]) return;
+  if (globalData.users[currentUser].bal < a) { showToast('❌ Insufficient balance', 1); return; }
 
   try {
     var res = await fetch(API_URL + '/api/withdraw', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user: cur, amt: a, upi: u })
+      body: JSON.stringify({ user: currentUser, amt: a, upi: u })
     });
     var data = await res.json();
     if (data.success) {
-      toast('✅ Withdrawal Request Sent');
+      showToast('✅ Withdrawal Request Sent');
       document.getElementById('wit_amt').value = '';
       document.getElementById('wit_upi').value = '';
-      setTimeout(function() { go('s4'); }, 1000);
+      setTimeout(function() { switchScreen('s4'); }, 1000);
     } else {
-      toast('❌ ' + data.message, 1);
+      showToast('❌ ' + data.message, 1);
     }
   } catch (err) {
-    toast('❌ Network Error', 1);
+    showToast('❌ Network Error', 1);
   }
-}
+};
 
-function updateAdminUPI() {
+window.adminUpdateUPI = function() {
   var v = document.getElementById('newUPI').value.trim();
-  if (!v) { toast('⚠️ Enter UPI ID', 1); return; }
-  if (!v.includes('@')) { toast('⚠️ Enter valid UPI ID', 1); return; }
-  sendAdminAction({ action: 'updateUPI', upi: v });
+  if (!v || !v.includes('@')) { showToast('⚠️ Enter valid UPI ID', 1); return; }
+  callAdminActionAPI({ action: 'updateUPI', upi: v });
   document.getElementById('newUPI').value = '';
-}
+};
 
-function updateAdminTG() {
+window.adminUpdateTG = function() {
   var v = document.getElementById('newTG').value.trim();
-  if (!v) { toast('⚠️ Enter Telegram link', 1); return; }
-  sendAdminAction({ action: 'updateTG', tg: v });
+  if (!v) { showToast('⚠️ Enter Telegram link', 1); return; }
+  callAdminActionAPI({ action: 'updateTG', tg: v });
   document.getElementById('newTG').value = '';
-}
+};
 
-function resetUserPass() {
+window.adminResetPass = function() {
   var u = document.getElementById('rsUser').value.trim().toLowerCase();
   var p = document.getElementById('rsPass').value.trim();
-  if (!u || !p) { toast('⚠️ Enter username & password', 1); return; }
-  if (!dbData.users[u]) { toast('❌ User not found', 1); return; }
-  sendAdminAction({ action: 'resetPass', user: u, pass: p });
+  if (!u || !p) { showToast('⚠️ Enter username & password', 1); return; }
+  if (!globalData.users[u]) { showToast('❌ User not found', 1); return; }
+  callAdminActionAPI({ action: 'resetPass', user: u, pass: p });
   document.getElementById('rsUser').value = '';
   document.getElementById('rsPass').value = '';
-}
+};
+
+window.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const refParam = urlParams.get('ref');
+  if (refParam) {
+    var suRef = document.getElementById('su_ref');
+    if (suRef) suRef.value = refParam;
+    switchScreen('s2');
+  }
+  fetchAppData();
+});
 </script>
 </body>
 </html>`;
