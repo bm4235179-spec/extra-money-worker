@@ -1,8 +1,5 @@
 export default {
-  async fetch(request, env, ctx) {
-    const url = new URL(request.url);
-    const path = url.pathname;
-
+  async fetch(request, env) {
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -13,156 +10,162 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
-    try {
-      await env.DB.prepare(`
-        CREATE TABLE IF NOT EXISTS app_data (
-          key TEXT PRIMARY KEY,
-          value TEXT
-        )
-      `).run();
+    const url = new URL(request.url);
+    const ADMIN_USER = "ExtraMoney_Admin_2026";
+    const ADMIN_PASS = "Em@2026#Secure!X9z";
 
-      const getData = async () => {
-        let { results } = await env.DB.prepare("SELECT value FROM app_data WHERE key = 'DB'").all();
-        if (results && results.length > 0) {
-          return JSON.parse(results[0].value);
-        }
-        return {
+    // Initialize database if not exists
+    async function getDB() {
+      let row = await env.DB.prepare("SELECT val FROM app_data WHERE id = 'DB'").first();
+      if (!row) {
+        const initial = JSON.stringify({
           users: {},
           deps: [],
           wits: [],
+          refs: [],
           cfg: { upi: "", tg: "@extramoney67" }
-        };
-      };
-
-      const saveData = async (data) => {
-        const strData = JSON.stringify(data);
-        await env.DB.prepare(
-          "INSERT INTO app_data (key, value) VALUES ('DB', ?) ON CONFLICT(key) DO UPDATE SET value = ?"
-        ).bind(strData, strData).run();
-      };
-
-      if (path === "/api/get-data" && request.method === "GET") {
-        const db = await getData();
-        return new Response(JSON.stringify(db), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
+        await env.DB.prepare("INSERT INTO app_data (id, val) VALUES ('DB', ?)").bind(initial).run();
+        return JSON.parse(initial);
+      }
+      return JSON.parse(row.val);
+    }
+
+    async function saveDB(data) {
+      await env.DB.prepare("UPDATE app_data SET val = ? WHERE id = 'DB'").bind(JSON.stringify(data)).run();
+    }
+
+    try {
+      // 1. Get Data API
+      if (url.pathname === "/api/get-data" && request.method === "GET") {
+        let db = await getDB();
+        return new Response(JSON.stringify(db), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      let body = {};
-      if (request.method === "POST") {
-        try {
-          body = await request.json();
-        } catch (e) {
-          body = {};
-        }
-      }
-
-      // Secure Admin Login Endpoint
-      if (path === "/api/admin-login" && request.method === "POST") {
-        const adminU = "ExtraMoney_Admin_2026";
-        const adminP = "Em@2026#Secure!X9z";
+      // 2. Register API (with auto-referral ₹50 bonus)
+      if (url.pathname === "/api/register" && request.method === "POST") {
+        let { name, user, pass, ref } = await request.json();
+        user = user.trim().toLowerCase();
         
-        if (body.user === adminU && body.pass === adminP) {
-          return new Response(JSON.stringify({ success: true, isAdmin: true }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" }
-          });
+        let db = await getDB();
+        if (db.users[user]) {
+          return new Response(JSON.stringify({ success: false, message: "Username already taken" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
-        return new Response(JSON.stringify({ success: false, isAdmin: false }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
+
+        let refBy = "";
+        let initialBal = 0;
+
+        if (ref && db.users[ref]) {
+          refBy = ref;
+          initialBal = 0; // New user starts with 0, referrer gets bonus
+          db.users[ref].bal += 50; // ₹50 referral bonus credited to referrer
+          db.refs.push({ id: Date.now(), referrer: ref, referred: user, amt: 50 });
+        }
+
+        db.users[user] = { name, pass, bal: initialBal, refBy };
+        await saveDB(db);
+
+        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      if (path === "/api/register" && request.method === "POST") {
-        const name = body.name || "";
-        const user = body.user || "";
-        const pass = body.pass || "";
-        const u = user.trim().toLowerCase();
-
-        if (!name || !u || !pass) {
-          return new Response(JSON.stringify({ success: false, message: "Sab fields bharo" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      // 3. Admin Login API
+      if (url.pathname === "/api/admin-login" && request.method === "POST") {
+        let { user, pass } = await request.json();
+        if (user === ADMIN_USER && pass === ADMIN_PASS) {
+          return new Response(JSON.stringify({ success: true, isAdmin: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
+        return new Response(JSON.stringify({ success: false }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      // 4. Deposit Request API (Auto-creates pending deposit without manual UTR)
+      if (url.pathname === "/api/deposit" && request.method === "POST") {
+        let { user, amt, bonus, total, utr } = await request.json();
+        let db = await getDB();
         
-        let db = await getData();
-        db.users[u] = { name: name.trim(), pass: pass.trim(), bal: 0 };
-        await saveData(db);
-        return new Response(JSON.stringify({ success: true, message: "Account Created!" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-
-      if (path === "/api/deposit" && request.method === "POST") {
-        let db = await getData();
         db.deps.push({
           id: Date.now(),
-          user: body.user,
-          amt: body.amt,
-          bonus: body.bonus,
-          total: body.total,
-          utr: body.utr,
+          user,
+          amt,
+          bonus,
+          total,
+          utr,
           status: "Pending"
         });
-        await saveData(db);
+
+        await saveDB(db);
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      if (path === "/api/withdraw" && request.method === "POST") {
-        let db = await getData();
-        if (!db.users[body.user] || db.users[body.user].bal < body.amt) {
-          return new Response(JSON.stringify({ success: false, message: "Balance kam hai" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      // 5. Withdraw Request API
+      if (url.pathname === "/api/withdraw" && request.method === "POST") {
+        let { user, amt, upi } = await request.json();
+        let db = await getDB();
+
+        if (!db.users[user] || db.users[user].bal < amt) {
+          return new Response(JSON.stringify({ success: false, message: "Insufficient balance" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
+
+        db.users[user].bal -= amt;
         db.wits.push({
           id: Date.now(),
-          user: body.user,
-          amt: body.amt,
-          upi: body.upi,
+          user,
+          amt,
+          upi,
           status: "Pending"
         });
-        await saveData(db);
+
+        await saveDB(db);
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      if (path === "/api/admin-action" && request.method === "POST") {
-        let db = await getData();
+      // 6. Admin Actions API (Approve/Reject deposits/withdrawals, update UPI/Telegram, reset password)
+      if (url.pathname === "/api/admin-action" && request.method === "POST") {
+        let body = await request.json();
+        let db = await getDB();
 
         if (body.action === "appD") {
-          let d = db.deps.find(x => x.id === body.id);
-          if (d && db.users[d.user]) {
-            db.users[d.user].bal += d.total;
-            d.status = "Approved";
+          let dep = db.deps.find(d => d.id === body.id);
+          if (dep && dep.status === "Pending") {
+            dep.status = "Approved";
+            if (db.users[dep.user]) {
+              db.users[dep.user].bal += dep.total;
+            }
           }
         } else if (body.action === "rejD") {
-          let d = db.deps.find(x => x.id === body.id);
-          if (d) d.status = "Rejected";
+          let dep = db.deps.find(d => d.id === body.id);
+          if (dep && dep.status === "Pending") {
+            dep.status = "Rejected";
+          }
         } else if (body.action === "appW") {
-          let w = db.wits.find(x => x.id === body.id);
-          if (w && db.users[w.user]) {
-            db.users[w.user].bal -= w.amt;
-            w.status = "Paid";
+          let wit = db.wits.find(w => w.id === body.id);
+          if (wit && wit.status === "Pending") {
+            wit.status = "Paid";
           }
         } else if (body.action === "rejW") {
-          let w = db.wits.find(x => x.id === body.id);
-          if (w) w.status = "Rejected";
+          let wit = db.wits.find(w => w.id === body.id);
+          if (wit && wit.status === "Pending") {
+            wit.status = "Cancelled";
+            if (db.users[wit.user]) {
+              db.users[wit.user].bal += wit.amt; // Refund back to user balance
+            }
+          }
         } else if (body.action === "updateUPI") {
           db.cfg.upi = body.upi;
         } else if (body.action === "updateTG") {
           db.cfg.tg = body.tg;
         } else if (body.action === "resetPass") {
-          let u = body.user ? body.user.toLowerCase() : "";
-          if (db.users[u]) {
-            db.users[u].pass = body.pass;
+          if (db.users[body.user]) {
+            db.users[body.user].pass = body.pass;
           }
         }
 
-        await saveData(db);
-        return new Response(JSON.stringify({ success: true, db }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
+        await saveDB(db);
+        return new Response(JSON.stringify({ success: true, db }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       return new Response("Not Found", { status: 404, headers: corsHeaders });
     } catch (err) {
-      return new Response(JSON.stringify({ success: false, error: err.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
+      return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
   }
 };
