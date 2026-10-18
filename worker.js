@@ -14,7 +14,7 @@ export default {
     const ADMIN_USER = "ExtraMoney_Admin_2026";
     const ADMIN_PASS = "Em@2026#Secure!X9z";
 
-    // 1. Safe getDB function jo purane data ko protect rakhega
+    // Safe getDB function - purane data ko protect rakhega aur overwrite nahi hone dega
     async function getDB() {
       try {
         let row = await env.DB.prepare("SELECT val FROM app_data WHERE id = 'DB'").first();
@@ -26,7 +26,6 @@ export default {
             refs: [],
             cfg: { upi: "", tg: "@extramoney67" }
           });
-          // Agar row nahi hai tabhi insert karega
           await env.DB.prepare("INSERT OR IGNORE INTO app_data (id, val) VALUES ('DB', ?)").bind(initial).run();
           return JSON.parse(initial);
         }
@@ -64,7 +63,7 @@ export default {
         if (ref && db.users[ref]) {
           refBy = ref;
           initialBal = 0;
-          db.users[ref].bal += 50; // Referrer bonus
+          db.users[ref].bal += 50; // Referrer bonus ₹50
           db.refs.push({ id: Date.now(), referrer: ref, referred: user, amt: 50 });
         }
 
