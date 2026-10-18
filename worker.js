@@ -46,32 +46,42 @@ export default {
       }
 
       if (url.pathname === "/api/register" && request.method === "POST") {
-        let { name, user, pass, ref } = await request.json();
-        if (!user || !pass) {
-          return new Response(JSON.stringify({ success: false, message: "Username and password required" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        try {
+          let body = await request.json();
+          let name = body.name;
+          let user = body.user;
+          let pass = body.pass;
+          let ref = body.ref;
+
+          if (!user || !pass) {
+            return new Response(JSON.stringify({ success: false, message: "Username and password required" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+          
+          user = user.trim().toLowerCase();
+          let cleanRef = ref ? ref.trim().toLowerCase() : "";
+          
+          let db = await getDB();
+          if (db.users[user]) {
+            return new Response(JSON.stringify({ success: false, message: "Username already taken" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+
+          let refBy = "";
+          let initialBal = 0;
+
+          if (cleanRef && db.users[cleanRef]) {
+            refBy = cleanRef;
+            initialBal = 0;
+            db.users[cleanRef].bal += 50; 
+            db.refs.push({ id: Date.now(), referrer: cleanRef, referred: user, amt: 50 });
+          }
+
+          db.users[user] = { name: name || user, pass, bal: initialBal, refBy };
+          await saveDB(db);
+
+          return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        } catch (regErr) {
+          return new Response(JSON.stringify({ success: false, message: "Server Error: " + regErr.message }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
-        user = user.trim().toLowerCase();
-        let cleanRef = ref ? ref.trim().toLowerCase() : "";
-        
-        let db = await getDB();
-        if (db.users[user]) {
-          return new Response(JSON.stringify({ success: false, message: "Username already taken" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
-
-        let refBy = "";
-        let initialBal = 0;
-
-        if (cleanRef && db.users[cleanRef]) {
-          refBy = cleanRef;
-          initialBal = 0;
-          db.users[cleanRef].bal += 50; 
-          db.refs.push({ id: Date.now(), referrer: cleanRef, referred: user, amt: 50 });
-        }
-
-        db.users[user] = { name: name || user, pass, bal: initialBal, refBy };
-        await saveDB(db);
-
-        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       if (url.pathname === "/api/admin-login" && request.method === "POST") {
