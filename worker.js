@@ -16,6 +16,7 @@ export default {
 
     async function getDB() {
       try {
+        await env.DB.prepare("CREATE TABLE IF NOT EXISTS app_data (id TEXT PRIMARY KEY, val TEXT)").run();
         let row = await env.DB.prepare("SELECT val FROM app_data WHERE id = 'DB'").first();
         if (!row || !row.val) {
           const initial = JSON.stringify({
@@ -25,7 +26,7 @@ export default {
             refs: [],
             cfg: { upi: "", tg: "@extramoney67" }
           });
-          await env.DB.prepare("INSERT OR IGNORE INTO app_data (id, val) VALUES ('DB', ?)").bind(initial).run();
+          await env.DB.prepare("INSERT OR REPLACE INTO app_data (id, val) VALUES ('DB', ?)").bind(initial).run();
           return JSON.parse(initial);
         }
         return JSON.parse(row.val);
@@ -299,25 +300,33 @@ async function sendAdminAction(actionObj) {
 }
 
 function go(id) {
-  fetchData().then(function() {
-    var all = document.querySelectorAll('.screen');
-    for (var i = 0; i < all.length; i++) all[i].classList.remove('active');
-    document.getElementById(id).classList.add('active');
-    document.getElementById('dd').classList.remove('show');
-    if (id === 's4') refWallet();
-    if (id === 's7') refAdmin();
-    if (id === 's5') {
-      document.getElementById('upiSec').style.display = 'none';
-      document.getElementById('btnProceed').style.display = 'block';
-    }
-    window.scrollTo(0, 0);
-  });
+  var all = document.querySelectorAll('.screen');
+  for (var i = 0; i < all.length; i++) all[i].classList.remove('active');
+  var target = document.getElementById(id);
+  if (target) target.classList.add('active');
+  var dd = document.getElementById('dd');
+  if (dd) dd.classList.remove('show');
+
+  if (id === 's4') refWallet();
+  if (id === 's7') refAdmin();
+  if (id === 's5') {
+    var upiSec = document.getElementById('upiSec');
+    var btnProceed = document.getElementById('btnProceed');
+    if (upiSec) upiSec.style.display = 'none';
+    if (btnProceed) btnProceed.style.display = 'block';
+  }
+  window.scrollTo(0, 0);
+  fetchData();
 }
 
-document.getElementById('toggleMenu').onclick = function(e) {
-  e.stopPropagation();
-  document.getElementById('dd').classList.toggle('show');
-};
+var toggleMenuEl = document.getElementById('toggleMenu');
+if (toggleMenuEl) {
+  toggleMenuEl.onclick = function(e) {
+    e.stopPropagation();
+    var dd = document.getElementById('dd');
+    if (dd) dd.classList.toggle('show');
+  };
+}
 
 document.addEventListener('click', function(e) {
   var dd = document.getElementById('dd');
